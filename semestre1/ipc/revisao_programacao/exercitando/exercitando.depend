@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1658359087 source:/home/andressa/Documentos/UFU/semestre1/ipc/revisao_programacao/exercitando/main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+

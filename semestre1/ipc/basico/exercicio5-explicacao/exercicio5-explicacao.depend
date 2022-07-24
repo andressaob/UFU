@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1652387545 source:/home/andressa/Documentos/UFU/semestre1/ipc/exercicio5-explicacao/main.c
+	<stdio.h>
+	<stdlib.h>
+

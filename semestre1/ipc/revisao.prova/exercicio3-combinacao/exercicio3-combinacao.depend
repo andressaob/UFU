@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1657149273 source:/home/andressa/Documentos/UFU/semestre1/ipc/revisao/exercicio3-combinacao/main.c
+	<stdio.h>
+	<stdlib.h>
+

@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1652386069 source:/home/andressa/Documentos/UFU/semestre1/ipc/exercicio4-if/main.c
+	<stdio.h>
+	<stdlib.h>
+

@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1657755862 source:/home/andressa/Documentos/UFU/semestre1/ipc/estruturas/exercicio2-atleta/main.c
+	<stdio.h>
+	<stdlib.h>
+

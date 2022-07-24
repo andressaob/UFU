@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1658106060 source:/home/andressa/Documentos/UFU/semestre1/ipc/atividadeAssincrona/atividade4/exercicio4-funcoes/main.c
+	<stdio.h>
+	<stdlib.h>
+

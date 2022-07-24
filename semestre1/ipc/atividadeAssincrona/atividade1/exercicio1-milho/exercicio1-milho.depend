@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1655069677 source:/home/andressa/Documentos/UFU/semestre1/ipc/matriz/exercicio1-milho/main.c
+	<stdio.h>
+	<stdlib.h>
+

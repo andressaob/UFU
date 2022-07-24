@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1653274310 source:/home/andressa/Documentos/UFU/semestre1/ipc/condicionais/exercicio4-bhaskara/main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+

@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1655760151 source:/home/andressa/Documentos/UFU/semestre1/ipc/atividadeAssincrona/atividade2/exercicio5-somatorio/main.c
+	<stdio.h>
+	<stdlib.h>
+

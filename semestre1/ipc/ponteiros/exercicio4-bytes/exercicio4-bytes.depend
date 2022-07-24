@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1655334758 source:/home/andressa/Documentos/UFU/semestre1/ipc/ponteiros/exercicio4-bytes/main.c
+	<stdio.h>
+	<stdlib.h>
+

@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1654713687 source:/home/andressa/Documentos/UFU/semestre1/ipc/vetores/exercicio6-d/main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+

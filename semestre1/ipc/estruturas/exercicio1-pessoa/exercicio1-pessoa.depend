@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1657752453 source:/home/andressa/Documentos/UFU/semestre1/ipc/estruturas/exercicio1-pessoa/main.c
+	<stdio.h>
+	<stdlib.h>
+

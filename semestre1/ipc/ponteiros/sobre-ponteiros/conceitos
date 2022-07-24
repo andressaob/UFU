@@ -1,0 +1,45 @@
+ponteiros são declarados igual as variáveis: tipo_do_ponteiro e *nome_do_ponteiro (com o asterisco à esquerda);
+guardam um endereço de memória de uma variével e apontam para o valor dela;
+TÊM que ser inicializados, assim como as variáveis normais:
+        podem ser inicializados com NULL, que é uma região de memória que não existe, ou seja, o endereço de nenhum lugar;
+        podem ser inicializados também com uma variável, que é um endereço que está na memória
+o * permite que eu modifique o valor da variável dentro do ponteiro;
+só podem armazenar variáveis que tem o mesmo tipo deles;
+as únicas operções matemáticas que podem ser feitas com eles é adição e subtração, não pode multiplicar e nem dividir, pois não faz sentido fazer isso com endereços de memória, e nem somar ou diminuir um endereço do outro, apenas um valor INTEIRO a um ponteiro. ou seja, só posso andar para frente ou para trás na memória.
+as operações de adição e subtração no endereço vão depender do tipo de dado que o ponteiro aponta, por exemplo, se for char, serão usados apenas 1 byte de memória, se for inteiro ou float serão usados 4, se for double serão usados 8 e assim por diante;
+podem ser comparados utilizando os operadores relacionais: <, >, ==, <=, >=, =!;
+ponteiro genérico: são ponteiros que podem apontar para todos os tipos de dados existentes ou que ainda serão criados. ele é declarado da seguinte forma: void *nome_do_ponteiro;
+        é necessário, antes de acessar o conteúdo, converter o ponteiro genérico para o tipo de ponteiro para o qual se deseja trabalhar, pois por ser genérico ele não sabe quantas células de memória pegar
+        as operações aritiméticas do ponteiro genérico são sempre realizados com base em uma unidade de memória (1 byte)
+é possível fazer um ponteiro apontar para um vetor, mas vai ficar como sendo uma equivalência, e não como o ponteiro recebendo o endereço do vetor, pois o vetor já é uma espécie de ponteiro; para imprimi-lo é só colocar como i[i];
+é possível criar um vetor de ponteiros, onde cada ponteiro de cada posição do vetor vai apontar par um lugar diferente na memória;
+é possível fazer um ponteiro apontar para outro ponteiro, onde este terá 2 *; para acessar o conteúdo do último endereço, é necessário usar os dois asteriscos, e para acessar apenas o conteúdo do ponteiro que está sendo apontado, é necessário usar apenas um asterisco;
+quantos mais níveis de ponteiro tiver, mais complicado fica para acessar o conteúdo;
+
+ALOCAÇÃO DINÂMICA
+alocar (reservar) dinamicamente (em tempo de execução) blocos de memória utilizando ponteiros, ou seja, transformando um ponteiro em vetor;
+funções para alocação dinâmica: malloc, calloc, realloc, free e existe um operador chamado sizeof;
+basicamente, será um ponteiro que vai poder apontar para determinadas posições de memória que serão consideradas como um vetor, que é o contrário do que estava sendo feito anteriormente, que era trabalhar o vetor como se fosse um ponteiro;
+no processo de alocação de memória, é necessário "pedir" memória para o computador, mas o tanto de memória necessáira depende do que irá ser guardado. 
+operador sizeof: é usado para saber quantos bytes de memória são necessários; é passado para ele o tipo do dado que será usado e ele retorna (em números inteiros) o número de bytes necessários para alocar um único elemento desse tipo de dado;
+função MALLOC: serve para alocar memória durante a execução do programa; faz o pedidio de memória para computador e retorna um ponteiro com o endereço do início do espaço de memória alocada;
+        a função malloc() recebe por parâmetro a quantidade de bytes a ser alocada e retorna NULL caso dê erro ou o ponteiro para a primeira posição do vetor caso dê certo;
+função CALLOC: serve para alocar memória durante a execução do programa; faz o pedidio de memória para computador e retorna um ponteiro com o endereço do início do espaço de memória alocada;
+        a função calloc() recebe por parâmetro o número de elementos do vetor e o tamanho de cada elemento, e retorna NULL caso dê erro ou o ponteiro para a primeira posição do vetor caso dê certo;
+DIFERENÇA ENTRE MALLOC E CALLOC: malloc faz apenas alocação de memória, ele seleciona um pedaço de memória e deixa disponível para usar, já o calloc faz isso e coloca 0's em todos os bits da memória local, ou seja, todos os bits 0 significa que tenho um valor 0, no malloc seria apenas lixo de memória, sem 0; ou seja, para alocar a memória e zerar ela, calloc é a melhor opção, mas para apenas alocar a memória, malloc é o ideal;
+função REALLOC: serve para alocar ou realocar memória durante a execução do programa; faz o pedidio de memória para computador e retorna um ponteiro com o endereço do início do espaço de memória alocada;
+        a função realloc() recebe por parâmetro um ponteiro genérico, onde havia memória que tinha sido alocada previamente que será realocada e a quantidade de bytes a ser alocada, e retorna NULL caso dê erro ou o ponteiro para a primeira posição do vetor caso dê certo;
+        caso o ponteiro para o bloco de memória previamente alocado seja  NULL, a função realloc irá alocar  memória da mesma forma que a função malloc;
+        caso o tamanho de memória solicitado seja igual a 0, o realloc irá liberar a memória da mesma forma que a função free;
+        caso seja necessário a realocação de uma memória que já estva previamente aloca, CUIDADO, pois pode ser que dê erro e que perca toda a alocação que já estava feita; por isso, a melhor forma de isso não acontecer é realocando em outro vetor, pq daí caso dê erro, a memória previamente alocada estará intacta;
+função FREE: libera a memória que foi alocada, geralmente usado no fim do programa para não ficar ocupando memória à toa;
+ALOCAÇÃO DE MATRIZES
+para alocar um vetor com mais de 1 dimensão precisamos utilizar o conseito de "ponteiro para ponteiro";
+ponteiro (1 nível): cria um vetor (*p);
+ponteiro para ponteiro (2 níveis): cria uma matriz (**p);
+ponteiro para ponteiro para ponteiro(3 níveis): cria um cubo, 3 dimensões (***p);
+e assim por diante;
+int* -> permite criar um vetor de int
+int** -> permite criar um vetor de int*
+o primeiro malloc (antes do primeiro for), usado para criar um vetor de ponteiros, cria as linhas e o segundo malloc (antes do segundo for), usado para criar um vetor de inteiros, cria as colunas (processo normal de ler a matriz, com 2 for, i e j);
+é necessário, assim como em qualquer alocação dinânima, é preciso liberar a matriz, o que será feito pelo processo inverso: se as colunas foram alocadas por último, elas têm quer ser as primeiras a serem liberadas (atravez de um for) e depois é liberado as linhas (fora do for);

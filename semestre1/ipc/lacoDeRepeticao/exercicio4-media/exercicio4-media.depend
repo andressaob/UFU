@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1654116746 source:/home/andressa/Documentos/UFU/semestre1/ipc/lacoDeRepeticao/exercicio4-media/main.c
+	<stdio.h>
+	<stdlib.h>
+

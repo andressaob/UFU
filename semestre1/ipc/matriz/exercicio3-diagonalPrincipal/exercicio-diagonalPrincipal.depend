@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1655264530 source:/home/andressa/Documentos/UFU/semestre1/ipc/matriz/exercicio-diagonalPrincipal/main.c
+	<stdio.h>
+	<stdlib.h>
+

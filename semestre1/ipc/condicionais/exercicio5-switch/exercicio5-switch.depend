@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1653276200 source:/home/andressa/Documentos/UFU/semestre1/ipc/condicionais/exercicio5-switch/main.c
+	<stdio.h>
+	<stdlib.h>
+

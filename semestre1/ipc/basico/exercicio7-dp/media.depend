@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1652734291 source:/home/andressa/Documentos/UFU/semestre1/ipc/media/main.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+

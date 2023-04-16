@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1659568703 source:/home/andressa/Documentos/UFU/semestre1/ipc/strings/exercicio3-inversao/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

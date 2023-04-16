@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1659566636 source:/home/andressa/Documentos/UFU/semestre1/ipc/strings/exercicio1-maiusculas/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

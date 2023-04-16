@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1654474631 source:/home/andressa/Documentos/UFU/semestre1/ipc/lacoRepeticao/exercicio5-s/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1654726635 source:/home/andressa/Documentos/UFU/semestre1/ipc/vetores/exercicio5-s/main.c
+	<stdio.h>
+	<stdlib.h>
+

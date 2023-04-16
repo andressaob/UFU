@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1654462158 source:/home/andressa/Documentos/UFU/semestre1/ipc/lacoRepeticao/exercicio3-inversao/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1654464116 source:/home/andressa/Documentos/UFU/semestre1/ipc/vetores/exercicio3-inversao/main.c
+	<stdio.h>
+	<stdlib.h>
+

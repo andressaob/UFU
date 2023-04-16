@@ -1,9 +1,0 @@
-# depslib dependency file v1.0
-1652912138 source:/home/andressa/Documentos/UFU/semestre1/ipc/exercicio1-pareimpar/main.c
-	<stdio.h>
-	<stdlib.h>
-
-1652912570 source:/home/andressa/Documentos/UFU/semestre1/ipc/condicionais/exercicio1-pareimpar/main.c
-	<stdio.h>
-	<stdlib.h>
-

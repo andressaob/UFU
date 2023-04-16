@@ -1,6 +1,0 @@
-# depslib dependency file v1.0
-1658092848 source:/home/andressa/Documentos/UFU/semestre1/ipc/atividadeAssincrona/atividade4/exercicio2-potencia/main.c
-	<stdio.h>
-	<stdlib.h>
-	<math.h>
-

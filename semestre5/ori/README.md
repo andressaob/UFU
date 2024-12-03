@@ -1,1 +1,1 @@
-Exercícios da matéria Organização e Recuperação da Informação
+Trabalhos da matéria Organização e Recuperação da Informação

@@ -1,0 +1,97 @@
+Nome: Andressa Oliveira Bernardes						Matrícula: 12121BSI201
+
+--lista 4
+set search_path to cargasaereas;
+
+
+--exercício 1
+--tempo de escala médio dos vôos com mais de uma rota
+select e.codemp, e.nome, avg(r.h_saida - r2.h_chegada) from rota r2 join voo v on r2.codvoo = v.codvoo join empresa e 
+on v.codemp = e.codemp join rota r on r2.codvoo = r.codvoo where r.h_saida > r2.h_chegada and r2.destino = r.origem
+group by e.codemp order by e.codemp asc;
+
+
+--exercício 2
+--selecionando um vôo específico que passa em um cidade mais de uma vez
+select e.codemp, e.nome, r.codvoo, r.origem, r.destino from rota r join voo v on v.codvoo = r.codvoo join empresa e on
+v.codemp = e.codemp where r.codvoo = '240' and r.origem < r.destino; --errado
+
+select e.codemp, e.nome, r.codvoo, r.origem from rota r join voo v on v.codvoo = r.codvoo join empresa e on
+v.codemp = e.codemp join rota r2 on r2.codvoo = r.codvoo where r.origem = r2.destino and r.h_saida < r2.h_saida; --certo
+
+
+--exercício 3
+select v.codvoo, v.codemp, cast(v2."data" as date) as date, r.origem, r2.destino, v2.h_saida_real, v3.h_chegada_real from voo v 
+join rota r on v.codvoo = r.codvoo join viagem v2 on r.codrota = v2.codrota join rota r2 on r.codvoo = r2.codvoo join viagem v3 
+on r2.codrota  = v3.codrota where v.codemp = 'GLO' and v2."data" = '2022-11-07' and v3."data" = '2022-11-07' and r.origem = 'BHZ' 
+and r2.destino = 'POA';
+
+
+--exercício 4
+select r2.codvoo, e.nome, min(r2.h_saida) as inicio, (select r.origem from rota r where r.codvoo = r2.codvoo order by r.h_saida 
+asc limit 1), max(r2.h_chegada) as término, (select r.destino from rota r where r.codvoo = r2.codvoo order by r.h_saida desc 
+limit 1), count(*) - 1 as escalas from rota r2 join voo v on r2.codvoo = v.codvoo join empresa e on v.codemp = e.codemp group by 
+r2.codvoo, e.nome order by nome, codvoo; ---FINALMENTE O JEITO CERTO
+
+
+--exercício 5
+select distinct e.codemp, e.nome from empresa e join voo v on e.codemp = v.codemp where v.codvoo not in (select v.codvoo from 
+voo v join rota r on v.codvoo = r.codvoo where r.origem = 'POA' or r.destino = 'POA');
+
+
+--exercício 6
+select e.codemp, e.nome from empresa e join voo v on e.codemp = v.codemp where v.codvoo in (select v.codvoo from voo v join 
+rota r on v.codvoo = r.codvoo where r.origem = 'GIG' or r.destino = 'GIG')
+--seleciona todas as empresas que tem vôos que passam por GIG
+except --operação de diferença
+select e.codemp, e.nome from empresa e join voo v on e.codemp = v.codemp where v.codvoo not in (select v.codvoo from voo v join 
+rota r on v.codvoo = r.codvoo where r.origem = 'GIG' or r.destino = 'GIG');
+--seleciona todas as empresas que não tem vôos que passam por GIG
+
+
+--exercício 7
+select count(*) as t_aeroporto from (select r.origem from rota r union select r.destino from rota r) aeroporto;
+--quantidade de aeroportos
+
+select count(*) as t_emp_aeroporto from (select r.origem from rota r join voo v on r.codvoo = v.codvoo where v.codemp = 'AZU' 
+union select r.destino from rota r join voo v on r.codvoo = v.codvoo where v.codemp = 'AZU') as emp_aeroporto;
+--quantidade de aeroportos que uma empresa específica cobre
+
+select e.codemp, e.nome from empresa e where (select distinct count(*) as t_aeroporto from (select r.origem from rota r union 
+select r.destino from rota r) aeroporto) = (select distinct count(*) as t_emp_aeroporto from (select r.origem from rota r join 
+voo v on r.codvoo = v.codvoo where v.codemp = e.codemp union select r.destino from rota r join voo v on r.codvoo = v.codvoo where 
+v.codemp = e.codemp) as emp_aeroporto);
+
+
+--exercício 8
+select e.nome, v.codvoo, min(r.h_saida), max(r.h_chegada), (select r2.destino from rota r2 where r2.codvoo = v.codvoo limit 1) as 
+escala_1, (select r2.destino from rota r2 where r2.codvoo = '151' limit 1 offset 1) as escala_2 from empresa e join voo v on 
+e.codemp = v.codemp join rota r on v.codvoo = r.codvoo where (select r2.origem from rota r2 where r.codvoo = r2.codvoo order by 
+r2.h_saida asc limit 1) = 'BHZ' and 
+(select r2.destino from rota r2 where r.codvoo = r2.codvoo order by r2.h_saida desc limit 1) = 'POA' group by e.nome, v.codvoo;
+
+
+--exercício 9
+select e.codemp, e.nome, r.codvoo, r.destino, v2.h_saida_real from empresa e join voo v on e.codemp = v.codemp join rota r on 
+v.codvoo = r.codvoo join viagem v2 on r.codrota = v2.codrota where v2."data" = '2022-11-07' and r.origem = 'GIG' group by 
+e.codemp, e.nome, r.codvoo, r.destino, v2.h_saida_real
+--seleciona todas as viagens que saem de GIG, no dia 07/11/2022 e com os respectivos horários de saida real
+except --operação de diferença
+select e.codemp, e.nome, r.codvoo, r.destino, v2.h_saida_real from empresa e join voo v on e.codemp = v.codemp join rota r on 
+v.codvoo = r.codvoo join viagem v2 on r.codrota = v2.codrota where v2."data" = '2022-11-07' and r.origem = 'GIG' and 
+v2.h_saida_real not in (select min(v.h_saida_real) from viagem v join rota r on v.codrota = r.codrota join voo v2 on 
+r.codvoo = v2.codvoo where v."data" = '2022-11-07' and r.origem = 'GIG' group by v2.codemp order by v2.codemp) group by 
+e.codemp, e.nome, r.codvoo, r.destino, v2.h_saida_real order by codemp;
+--seleciona todas as viagens que saem de GIG, no dia 07/11/2022 e com os respectivos horários de saída real (com exceção das
+--primeiras viagens do dia de cada empresa)
+
+
+--exercício 10
+select v.codrota, v."data", v.h_saida_real, r.origem, v.h_chegada_real, r.destino, v.codaviao, 
+	case
+		when (v.h_saida_real - r.h_saida) > '00:10:00' then 'Atrasado'
+		else 'Pontual'
+	end as case
+from viagem v join rota r on v.codrota = r.codrota join voo v2 on r.codvoo = v2.codvoo where v2.codemp = 'AZU' 
+and v."data" = '2022-11-07' group by v.codrota, v."data", r.origem, r.destino, r.h_saida order by v.h_saida_real;
+

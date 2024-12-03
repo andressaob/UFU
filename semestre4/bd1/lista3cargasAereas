@@ -1,0 +1,87 @@
+Nome: Andressa Oliveira Bernardes 			Matrícula: 12121BSI201
+
+set search_path to cargasaereas;
+
+--exercício 1
+select e.codemp, e.nome from empresa e order by e.nome asc;
+
+
+--exercício 2
+select v.codvoo, e.codemp, e.nome from voo v join empresa e on v.codemp = e.codemp order by e.nome asc;
+
+
+--exercício 3
+select r.*, v.codvoo from rota r join voo v on r.codvoo = v.codvoo where v.codemp ='GLO' order by r.h_saida;
+
+
+--exercício 4
+select v.*, r.destino from viagem v join rota r on v.codrota = r.codrota where r.origem = 'GIG' and v."data" = '2022-11-07';
+
+
+--exercício 5
+--1) contando as viagens com atraso superior a 10 minutos
+select count(v.*) from viagem v join rota r on r.codrota = v.codrota where v.h_saida_real - r.h_saida > '00:10:00';
+--2) listando as empresas com os voos
+select e.codemp, e.nome from empresa e join voo v on e.codemp = v.codemp;
+
+--juntando 1 e 2 em um select só
+select e.codemp, e.nome, count(v.*) from empresa e join voo v on e.codemp = v.codemp join rota r on v.codvoo = r.codvoo join 
+viagem v2 on r.codrota = v2.codrota where v2.h_saida_real - r.h_saida > '00:10:00' group by e.codemp order by e.codemp asc;
+
+
+--exercício 6
+--1) listando as rotas dos vôos
+select r.origem from rota r join voo v on r.codvoo = v.codvoo;
+
+--2) listando os vôos pela empresa AZUL
+select v.codvoo from voo v where v.codemp = 'AZU';
+
+--juntando 1 e 2 em um select só
+select distinct r.origem from rota r join voo v on r.codvoo = v.codvoo where r.codvoo in (select v.codvoo from voo v where 
+v.codemp = 'AZU') order by r.origem asc;
+
+
+--exercício 7
+--1) listando um vôo específico
+select v.codvoo from voo v where v.codvoo = '100';
+
+--2) listando a distância total (somatório da distância de cada trecho)
+select sum(t.distancia) from trecho t join rota r on t.origem = r.origem and t.destino = r.destino;
+
+--juntando 1 e 2 em um select só
+select v.codvoo, sum(t.distancia) from voo v, trecho t join rota r on t.origem = r.origem and t.destino = r.destino 
+where v.codvoo = r.codvoo group by v.codvoo order by sum desc;
+
+
+--exercício 8
+--listando a média dos atrasos das viagens
+select avg(v.h_saida_real - r.h_saida) from viagem v join rota r on r.codrota = v.codrota where v.h_saida_real > r.h_saida;
+
+--listando as viagens que atrasaram mais que a média de atrasos
+select e.*, r.origem, r.destino, v."data", v.h_saida_real, v.h_chegada_real from empresa e join voo v2 on e.codemp = v2.codemp 
+join rota r on v2.codvoo = r.codvoo join viagem v on r.codrota = v.codrota where (v.h_saida_real - r.h_saida) > 
+(select avg(v.h_saida_real - r.h_saida) from viagem v join rota r on r.codrota = v.codrota where v.h_saida_real > r.h_saida);
+
+
+--exercício 9
+--listando o vôo com maior duração da Gol
+select r.codvoo, sum(r.h_chegada - r.h_saida) from rota r join voo v on r.codvoo = v.codvoo where v.codemp = 'GLO' group by 
+r.codvoo order by sum desc limit 1;
+
+--exercício 10
+--calculando a maior distância dos trechos pelos quais os vôos da Gol passam
+select max(t.distancia) as max_tdistancia from trecho t join rota r on t.origem = r.origem and t.destino = r.destino join voo v 
+on r.codvoo = v.codvoo where v.codemp = 'GLO';
+
+--listando os pontos de cada trecho pelos quais os vôos da Gol passam
+select distinct t.*,
+	case 
+		when (t.distancia < (select max(t.distancia) from trecho t join rota r on t.origem = r.origem and t.destino = r.destino 
+		join voo v on r.codvoo = v.codvoo where v.codemp = 'GLO')) then (t.distancia) * 1000 / (select max(t.distancia) from 
+		trecho t join rota r on t.origem = r.origem and t.destino = r.destino join voo v on r.codvoo = v.codvoo where v.codemp =
+		'GLO')
+		else 1000
+	end as pontos
+from trecho t join rota r on t.origem = r.origem and t.destino = r.destino join voo v on r.codvoo = v.codvoo where 
+v.codemp = 'GLO' and t.origem < t.destino group by t.origem, t.destino order by t.distancia asc;
+

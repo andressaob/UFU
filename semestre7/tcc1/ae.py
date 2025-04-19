@@ -1,19 +1,21 @@
 import struct
 import time
-import random
-from numba import njit
+from numba import njit # Incompatível com classes, sendo necessário a utilização de funções auxiliares para algumas funções
+import numpy as np
 
 TAMANHO = 800 # Não alterar
- 
+
 class INDIVIDUO:
-    def __init__(self, fitness = 0, frase = ""): #__init__ é um método construtor que inicializa os atributos dos objetos
+    def __init__(self, fitness = 0, fraseArray = None): #__init__ é um método construtor que inicializa os atributos dos objetos
         self.fitness = fitness # Número de caracteres distintos entre a frase alvo e a frase cópia (quanto menor melhor)
-        self.frase = frase # Frase cópia
+        self.fraseArray = fraseArray # Frase cópia representada como array numérico
 
 class PARAMETROS:
-    def __init__(self, fraseAlvo = "", alfabeto = "", quantidadeLetras = 0, populacao = 0, geracoes = 0, elitismo = 0, mutacao = 0, torneio = 0):
+    def __init__(self, fraseAlvo = "", quantidadeLetras = 0, populacao = 0, geracoes = 0, elitismo = 0, mutacao = 0, torneio = 0):
         self.fraseAlvo = fraseAlvo # Frase alvo
-        self.alfabeto = alfabeto # Caracteres distintos presentes na frase alvo
+        self.fraseAlvoArray = None # Frase alvo representada como array numérico
+        self.charToInt = {} # Mapeamento char -> int
+        self.intToChar = np.array([]) # Mapeamento int -> char (array NumPy)
         self.quantidadeLetras = quantidadeLetras # Número de caracteres distintos presentes na frase alvo
         self.populacao = populacao # Tamanho da população
         self.geracoes = geracoes # Número de gerações
@@ -32,7 +34,8 @@ def escreveArquivo():
     elitismo = 5
     torneio = 3
     fraseAlvo = "O Tejo e mais belo que o rio que corre pela minha aldeia,Mas o Tejo nao e mais belo que o rio que corre pela minha aldeia.Porque o Tejo nao e o rio que corre pela minha aldeia,O Tejo tem grandes navios,E nele navega ainda,Para aqueles que veem em tudo o que la nao esta,A memoria das naus.O Tejo desce de Espanha,E o Tejo entra no mar em Portugal.Toda a gente sabe isso.Mas poucos sabem qual e o rio da minha aldeia,E para onde ele vai,E donde ele vem.E por isso, porque pertence a menos gente,e mais livre e maior o rio da minha aldeia.Pelo Tejo vai se para o Mundo.Para alem do Tejo ha a America.E a fortuna daqueles que a encontram.Ninguem nunca pensou no que ha para alem.Do rio da minha aldeia.O rio da minha aldeia nao faz pensar em nada.Quem esta ao pe dele esta so ao pe dele."
-    
+    # Tamanho da frase alvo: 784 caracteres
+
     try:
         # Gera o arquivo entrada.in para escrita
         with open('entrada.in', 'wb') as arquivo:
@@ -108,78 +111,59 @@ def leArquivo():
     return parametros
 
 '''
-    Função fitnessAuxiliar:
-        Calcula o fitness de um indivíduo baseado no número de caracteres distintos 
-        entre a frase alvo e a frase cópia. Quanto menor o número de caracteres 
-        distintos, melhor o fitness. IMPORTANTE: usa tipos "simples" para evitar 
-        problemas com a biblioteca numba, que está auxiliando na otimização.
+    Função fitness:
+        Calcula o fitness de um indivíduo baseado no número de caracteres distintos entre 
+        a frase alvo e a frase cópia. Quanto menor o número de caracteres distintos, melhor 
+        o fitness. Ambas as frases estão representadas como arrays numéricos para melhor 
+        compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros: 
-        fraseCopia - indivíduo a ser avaliado.
-        fraseAlvo - frase alvo.
+        fraseArray - frase representada como array numérico do indivíduo a ser avaliado.
+        fraseAlvoAray - frase alvo representada como array numérico.
     Retorno:
         Número de caracteres distintos entre a frase alvo e a frase cópia.
 '''
 @njit
-def fitnessAuxiliar(fraseCopia, fraseAlvo):
+def fitness(fraseArray, fraseAlvoAray):
     quantidadeDistintos = 0
-    tamanhoCopia = len(fraseCopia)
-    
-    for i in range(len(fraseAlvo)):
-        if i < tamanhoCopia and fraseCopia[i] != fraseAlvo[i]:
+    tamanhoCopia = len(fraseArray)
+    tamanhoAlvo = len(fraseAlvoAray)
+
+    tamanhoMin = min(tamanhoCopia, tamanhoAlvo)
+    for i in range(tamanhoMin):
+        if fraseArray[i] != fraseAlvoAray[i]:
             quantidadeDistintos += 1
-        elif i >= tamanhoCopia:
-            quantidadeDistintos += 1
-            
+
+    # Penalidade pela diferença de tamanho
+    quantidadeDistintos += abs(tamanhoCopia - tamanhoAlvo)
+
     return quantidadeDistintos
 
 '''
-    Função fitness:
-        Utiliza a função fitnessAuxiliar para calcular o fitness de um indivíduo.
-    Parâmetros:
-        copia - um dos indivíduos da população.
-        parametros - classe PARAMETROS.
-    Retorno:
-        Retorna o número de caracteres distintos entre a frase alvo e a frase cópia.
-'''
-def fitness(copia, parametros):
-    return fitnessAuxiliar(copia.frase, parametros.fraseAlvo)
-
-'''
     Função mutacaoAuxiliar:
-        Altera aleatoriamente um gene (caractere) da frase fornecida (filho), com os 
-        genes da frase alvo. IMPORTANTE: usa tipos "simples" para evitar 
-        problemas com a biblioteca numba, que está auxiliando na otimização.
+        Altera aleatoriamente um gene (número) da frase do filho, substituindo-o
+        por um valor aleatório correspondente a um dos caracteres presentes no alfabeto
+        da frase alvo. Ambas as frases estão representadas como arrays numéricos para 
+        melhor compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros:
-        frase - frase a ser mutada.
+        fraseArray - frase representada como array numérico do indivíduo a ser avaliado.
         taxaMutacao - taxa de mutação (1 a 100).
         tamanhoFraseAlvo - tamanho da frase alvo.
-        alfabeto - caracteres distintos na frase alvo.
         tamanhoAlfabeto - número de caracteres disponíveis para a mutação.
     Retorno:
         Frase após ser mutada.
 '''
 @njit
-def mutacaoAuxiliar(frase, taxaMutacao, tamanhoFraseAlvo, alfabeto, tamanhoAlfabeto):
+def mutacaoAuxiliar(fraseArray, taxaMutacao, tamanhoAlfabeto):
     # Frase auxiliar
-    novaFrase = frase
-    aleatorio = random.randint(0, 99)
+    novaFraseArray = fraseArray.copy()
     
     # Verifica se ocorrerá mutação baseado na taxa
-    if aleatorio <= taxaMutacao and tamanhoAlfabeto > 0:
-        posicao = random.randint(0, tamanhoFraseAlvo - 1)
-        # Converte a string em uma lista de caracteres para modificação
-        listaFrase = list(novaFrase)
-        if posicao < len(novaFrase):
-            # Substitui o caractere na posição por um caractere aleatório do alfabeto
-            indiceAleatorio = random.randint(0, tamanhoAlfabeto - 1)
-            listaFrase[posicao] = alfabeto[indiceAleatorio]
-            novaFrase = "".join(listaFrase)
-        else:
-            # Adiciona um caractere aleatório à frase
-            indiceAleatorio = random.randint(0, tamanhoAlfabeto - 1)
-            novaFrase += alfabeto[indiceAleatorio]
-    
-    return novaFrase
+    if np.random.randint(0, 100) <= taxaMutacao and tamanhoAlfabeto > 0:
+        posicao = np.random.randint(len(novaFraseArray))
+        novoValor = np.random.randint(0, tamanhoAlfabeto)
+        novaFraseArray[posicao] = novoValor
+        
+    return novaFraseArray
 
 '''
     Função mutacao:
@@ -191,36 +175,41 @@ def mutacaoAuxiliar(frase, taxaMutacao, tamanhoFraseAlvo, alfabeto, tamanhoAlfab
         Indivíduo mutado.
 '''
 def mutacao(filho, parametros):
-    individuo = INDIVIDUO(filho.fitness, filho.frase)
+    individuo = INDIVIDUO(filho.fitness, filho.fraseArray)
 
-    individuo.frase = mutacaoAuxiliar(filho.frase, parametros.mutacao, len(parametros.fraseAlvo), 
-                        parametros.alfabeto, parametros.quantidadeLetras)
+    # Certifica que temos a representação de array
+    if filho.fraseArray is None:
+        return INDIVIDUO(filho.fitness, None) # Retorna cópia sem array se original não tem
+
+    # Aplica mutação na representação numérica
+    individuo.fraseArray = mutacaoAuxiliar(filho.fraseArray, parametros.mutacao, parametros.quantidadeLetras)
 
     return individuo
 
 '''
     Função recombinacaoUniformeAuxiliar:
-        Combina aleatoriamente os genes da frase pai e mãe no filho. IMPORTANTE: usa tipos 
-        "simples" para evitar problemas com a biblioteca numba, que está auxiliando na otimização.
+        Combina aleatoriamente os genes da frase pai e mãe no filho. Ambas as frases
+        estão representadas como arrays numéricos para melhor compatibilidade com a 
+        biblioteca numba, usada para otimizar o código.
     Parâmetros:
-        frasePai - frase do pai.
-        fraseMae - frase da mãe.
+        frasePaiArray - frase do pai representada como array numérico.
+        fraseMaeArray - frase da mãe representada como array numérico.
         tamanho - tamanho da frase alvo.
     Retorno:
-        Frase do filho resultante da combinação entre pai e mãe.
+        Frase do filho resultante da combinação entre pai e mãe (representada como array numérico).
 '''
 @njit
-def recombinacaoUniformeAuxiliar(frasePai, fraseMae, tamanho):
-    filhoFrase = ""
-    comprimentoMax = min(len(frasePai), len(fraseMae), tamanho)
+def recombinacaoUniformeAuxiliar(frasePaiArray, fraseMaeArray, tamanho):
+    comprimentoMax = min(len(frasePaiArray), len(fraseMaeArray), tamanho)
+    filhoArray = np.empty(comprimentoMax, dtype=frasePaiArray.dtype)
     
     for i in range(comprimentoMax):
-        if random.random() < 0.5:
-            filhoFrase += frasePai[i]
+        if np.random.randint(0, 2) == 1:
+            filhoArray[i] = frasePaiArray[i]
         else:
-            filhoFrase += fraseMae[i]
+            filhoArray[i] = fraseMaeArray[i]
             
-    return filhoFrase
+    return filhoArray                                                                                                                                               
 
 '''
     Função recombinacaoUniforme:
@@ -232,9 +221,14 @@ def recombinacaoUniformeAuxiliar(frasePai, fraseMae, tamanho):
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacaoUniforme(pai, mae, numero):
+def recombinacaoUniforme(pai, mae, numero, parametros):
     filho = INDIVIDUO()
-    filho.frase = recombinacaoUniformeAuxiliar(pai.frase, mae.frase, numero)
+
+    # Certifica que os pais têm representação de array
+    if pai.fraseArray is None or mae.fraseArray is None:
+        return INDIVIDUO() # Retorna indivíduo vazio
+
+    filho.fraseArray = recombinacaoUniformeAuxiliar(pai.fraseArray, mae.fraseArray, numero)
 
     return filho
 
@@ -252,7 +246,7 @@ def selecaoPorTorneio(populacao, parametros):
     melhor.fitness = -1
 
     for i in range(parametros.torneio):
-        auxiliar = populacao[random.randint(0, parametros.populacao - 1)]
+        auxiliar = populacao[np.random.randint(0, parametros.populacao)]
         if melhor.fitness == -1 or auxiliar.fitness < melhor.fitness:
             melhor = auxiliar
 
@@ -296,14 +290,14 @@ def reproducao(populacao, parametros):
     melhor = populacao[0]
 
     for i in range(taxaDeElitismo):
-        novaPopulacao[i] = INDIVIDUO(populacao[i].fitness, populacao[i].frase)
+        novaPopulacao[i] = INDIVIDUO(populacao[i].fitness, np.copy(populacao[i].fraseArray))
 
     for i in range(taxaDeElitismo, parametros.populacao):
         pai = selecaoPorTorneio(populacao, parametros)
         mae = selecaoPorTorneio(populacao, parametros)
-        filho = recombinacaoUniforme(pai, mae, len(parametros.fraseAlvo))
+        filho = recombinacaoUniforme(pai, mae, len(parametros.fraseAlvoArray), parametros)
         filho = mutacao(filho, parametros)
-        filho.fitness = fitness(filho, parametros)
+        filho.fitness = fitness(filho.fraseArray, parametros.fraseAlvoArray)
 
         if filho.fitness < melhor.fitness:
             melhor = filho
@@ -317,47 +311,46 @@ def reproducao(populacao, parametros):
 '''
     Função geraFrasesAleatorias:
         Gera frases aleatórias de tamanho definido, utilizando os caracteres disponíveis
-        no alfabeto. IMPORTANTE: usa tipos "simples" para evitar problemas com a 
-        biblioteca numba, que está auxiliando na otimização.
+        no alfabeto. As frases geradas são representadas como arrays numéricos para 
+        melhor compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros:
         tamanhoPopulacao - número de frases a serem geradas.
-        tamanhoFrase - tamanho de cada frase.
-        alfabeto - caracteres distintos na frase alvo.
+        tamanhoFrase - tamanho de cada frase (representada em array numérico).
+        numLetras - número de caracteres distintos na frase alvo.
     Retorno:
         Lista de frases aleatórias geradas.
 '''
 @njit
-def geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, alfabeto):
-    frases = []
+def geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, numLetras):
+    frases = [np.empty(tamanhoFrase, dtype=np.int64) for _ in range(tamanhoPopulacao)]
     for i in range(tamanhoPopulacao):
-        frase = ""
-        for j in range(tamanhoFrase):
-            indice = random.randint(0, len(alfabeto) - 1)
-            frase += alfabeto[indice]
-        frases.append(frase)
+        frases[i] = np.random.randint(0, numLetras, size=tamanhoFrase)
+
     return frases
 
 '''
     Função inicializa:
         Utiliza a função geraFrasesAleatorias para inicializar a população com frases 
-        aleatórias de tamanho definido e calcula o fitness de cada uma delas.
+        aleatórias (representadas como arrays numéricos) de tamanho definido e 
+        calcula o fitness de cada uma delas.
     Parâmetros:
         populacao - população de indivíduos (frases cópias).
         parametros - classe PARAMETROS.
     Retorno:
         Nulo.
 '''
+
 def inicializa(populacao, parametros):
-    alfabeto = parametros.alfabeto
-    tamanhoPopulacao = parametros.populacao
+    numLetras = parametros.quantidadeLetras
     tamanhoFrase = len(parametros.fraseAlvo)
+    tamanhoPopulacao = parametros.populacao
     
-    frases_geradas = geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, alfabeto)
+    frasesGeradas = geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, numLetras)
     
     for i in range(tamanhoPopulacao):
         populacao[i] = INDIVIDUO()
-        populacao[i].frase = frases_geradas[i]
-        populacao[i].fitness = fitness(populacao[i], parametros)
+        populacao[i].fraseArray = frasesGeradas[i]
+        populacao[i].fitness = fitness(populacao[i].fraseArray, parametros.fraseAlvoArray)
         
 '''
     Função alfabeto:
@@ -365,15 +358,36 @@ def inicializa(populacao, parametros):
     Parâmetros:
         parametros - classe PARAMETROS.
     Retorno:
-        Retorna a classe PARAMETROS com o alfabeto e a quantidade de letras.
+        Retorna a classe PARAMETROS com a quantidade de letras, mapeamento 
+        entre char <-> int e frase alvo convertida em array numérico.
 '''
 def alfabeto(parametros):
     alfabeto = "".join(sorted(set(parametros.fraseAlvo)))
     
-    parametros.alfabeto = alfabeto
     parametros.quantidadeLetras = len(alfabeto)
 
+    # Cria mapeamentos char <-> int
+    parametros.charToInt = {char: i for i, char in enumerate(alfabeto)}
+    parametros.intToChar = np.array(list(alfabeto), dtype=str) # Array para mapeamento reverso rápido
+
+    # Converter fraseAlvo para array numérico (mantendo a string original)
+    parametros.fraseAlvoArray = np.array([parametros.charToInt[c] for c in parametros.fraseAlvo], dtype=np.int32)
+    
+
     return parametros
+
+'''
+    Função setSeed: 
+        Define uma semente para o gerador de números aleatórios usado pela biblioteca
+        numba, permitindo reprodutibilidade nos testes.
+    Parâmetros:
+        seed - semente a ser definida.
+    Retorno:
+        Nulo.
+'''
+'''@njit
+def setSeed(seed):
+    np.random.seed(seed)'''
 
 '''
     Função main:
@@ -381,6 +395,8 @@ def alfabeto(parametros):
         reproduza-a através de uma população de frases cópias geradas aleatoriamente.
 '''
 def main():
+    #np.random.seed(0) # Semente fixa para testes
+    #setSeed(0) # Semente fixa para testes
     
     inicio = time.time()
 
@@ -388,16 +404,20 @@ def main():
     parametros = leArquivo()
     parametros = alfabeto(parametros)
 
+    print(f"{len(parametros.fraseAlvo)}\n")
+
     geracao = 0
     populacao = [INDIVIDUO() for _ in range(parametros.populacao)]
 
-    random.seed(time.time_ns())
+    np.random.seed(int(time.time())) # Semente de acordo com o tempo de máquina
     inicializa(populacao, parametros)
 
     while geracao <= parametros.geracoes:
         melhor = reproducao(populacao, parametros)
         print(f"\nIteracao {geracao}, melhor fitness {melhor.fitness}.\n")
-        print(f"{melhor.frase}\n")
+        # Converte a frase do melhor indivíduo para string
+        melhorFrase = "".join(parametros.intToChar[melhor.fraseArray]) if melhor.fraseArray is not None else "N/A"
+        print(f"{melhorFrase}\n")
         geracao += 1
         if melhor.fitness == 0:
             break
@@ -409,4 +429,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #tempo total gasto pela CPU: 147.349347114563, iteração 1091

@@ -28,13 +28,22 @@ class PARAMETROS:
         Escreve no arquivo entrada.in a frase alvo e os parâmetros especificados.
 '''
 def escreveArquivo():
-    populacao = 900
+    populacao = 600
     geracoes = 1800
     mutacao = 15
     elitismo = 5
     torneio = 3
-    fraseAlvo = "O Tejo e mais belo que o rio que corre pela minha aldeia,Mas o Tejo nao e mais belo que o rio que corre pela minha aldeia.Porque o Tejo nao e o rio que corre pela minha aldeia,O Tejo tem grandes navios,E nele navega ainda,Para aqueles que veem em tudo o que la nao esta,A memoria das naus.O Tejo desce de Espanha,E o Tejo entra no mar em Portugal.Toda a gente sabe isso.Mas poucos sabem qual e o rio da minha aldeia,E para onde ele vai,E donde ele vem.E por isso, porque pertence a menos gente,e mais livre e maior o rio da minha aldeia.Pelo Tejo vai se para o Mundo.Para alem do Tejo ha a America.E a fortuna daqueles que a encontram.Ninguem nunca pensou no que ha para alem.Do rio da minha aldeia.O rio da minha aldeia nao faz pensar em nada.Quem esta ao pe dele esta so ao pe dele."
-    # Tamanho da frase alvo: 784 caracteres
+    
+    fraseAlvo = "O Tejo e mais belo que o rio que corre pela minha aldeia,Mas o Tejo nao e mais belo que o rio que corre pela minha aldeia.Porque o Tejo nao e o rio que corre pela minha aldeia,O Tejo tem grandes navios,E nele navega ainda,Para aqueles que veem em tudo o que la nao esta,A memoria das naus.O Tejo desce de Espanha,E o Tejo entra no mar em Portugal.Toda a gente sabe isso.Mas poucos sabem qual e o rio da minha aldeia,E para onde ele vai,E donde ele vem.E por isso, porque pertence a menos gente,e mais livre e maior o rio da minha aldeia.Pelo Tejo vai se para o Mundo.Para alem do Tejo ha a America.E a fortuna daqueles que a encontram.Ninguem nunca pensou no que ha para alem.Do rio da minha aldeia.O rio da minha aldeia nao faz pensar em nada.Quem esta ao pe dele esta so ao pe dele." #784
+
+    # Trecho adaptado da música "De Volta Para o Futuro" de Fabio Brazza
+    #fraseAlvo = "Eram la pelos anos tres mil e o mundo era mais ou menos aquilo que Nostradamus previu.O ser humano frio,num andar robotico,um olhar vazio,um mundo caotico.Eu vi a manipulacao genetica definir antes de nascer,o nosso ser e nossa estetica.Humanidade cetica,desafiando a etica,como se nao passassemos de uma mera formula aritmetica.Vi cidades sendo engolidas pelos mares com o desaparecimento das calotas polares.Eu vi cameras ate no ceu,o verdadeiro Big Brother,como descrito por George Orwel.Seguimos a natureza fria da profecia maquiavelica e a maior industria do mundo continuava sendo a belica." #596
+
+    # Trecho do livro "Em Algum Lugar Nas Estrelas" de Clare Vanderpool
+    #fraseAlvo = "A grande ursa negra,impressionante como a Ursa Maior,balancou a cabeca de um lado para o outro,e seu rugido fez tremer a paisagem proxima da Trilha Apalache.Eu digo que e ela,mas a verdade e que nao dava para ter certeza.Nao haviam marcas que inidicavam que era femea.Nao havia filhotes a vista.Mas eu sabia.Eu a conhecia como conhecia minha propria mae.Era sua vontade inabalavel de nos manter vivos." #401
+
+    # Trecho da música "Jesus Chorou" de Racionais MC's
+    #fraseAlvo = "O que e, o que e?Clara e salgada,cabe em um olho e pesa uma tonelada.Tem sabor de mar,pode ser discreta.Inquilina da dor,morada predileta.Na calada ela vem,refem da vinganca,irma do desespero,rival da esperança." #211
 
     try:
         # Gera o arquivo entrada.in para escrita
@@ -394,9 +403,11 @@ def setSeed(seed):
         Implementa o Algoritmo Evolutivo para o problema: dada uma frase alvo,
         reproduza-a através de uma população de frases cópias geradas aleatoriamente.
 '''
+
 def main():
     #np.random.seed(0) # Semente fixa para testes
     #setSeed(0) # Semente fixa para testes
+    
     
     inicio = time.time()
 
@@ -404,7 +415,7 @@ def main():
     parametros = leArquivo()
     parametros = alfabeto(parametros)
 
-    print(f"{len(parametros.fraseAlvo)}\n")
+    #print(f"{len(parametros.fraseAlvo)}\n")
 
     geracao = 0
     populacao = [INDIVIDUO() for _ in range(parametros.populacao)]

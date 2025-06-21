@@ -3,17 +3,20 @@ import time
 from numba import njit # Incompatível com classes, sendo necessário a utilização de funções auxiliares para algumas funções
 import numpy as np
 
-class INDIVIDUO:
-    #__init__ é um método construtor que inicializa os atributos dos objetos
-    def __init__(self, fitness = 0, matriz = None):
-        self.fitness = fitness # Número de caracteres distintos entre a matriz alvo e a matriz cópia (quanto menor melhor)
-        self.matriz = matriz # Matriz contendo as nove 'submatrizes'
+TAMANHO = 800 # Não alterar
 
+class INDIVIDUO:
+    def __init__(self, fitness = 0, fraseArray = None): #__init__ é um método construtor que inicializa os atributos dos objetos
+        self.fitness = fitness # Número de caracteres distintos entre a frase alvo e a frase cópia (quanto menor melhor)
+        self.fraseArray = fraseArray # Frase cópia representada como array numérico
 
 class PARAMETROS:
-    def __init__(self, matrizAlvo = None, numerosValidos = None, populacao = 0, geracoes = 0, elitismo = 0, mutacao = 0, torneio = 0):
-        self.matrizAlvo = matrizAlvo # Matriz alvo
-        self.numerosValidos = numerosValidos # Números válidos (1-9) para o Sudoku
+    def __init__(self, fraseAlvo = "", quantidadeLetras = 0, populacao = 0, geracoes = 0, elitismo = 0, mutacao = 0, torneio = 0):
+        self.fraseAlvo = fraseAlvo # Frase alvo
+        self.fraseAlvoArray = None # Frase alvo representada como array numérico
+        self.charToInt = {} # Mapeamento char -> int
+        self.intToChar = np.array([]) # Mapeamento int -> char (array NumPy)
+        self.quantidadeLetras = quantidadeLetras # Número de caracteres distintos presentes na frase alvo
         self.populacao = populacao # Tamanho da população
         self.geracoes = geracoes # Número de gerações
         self.elitismo = elitismo # Taxa de elitismo (1 a 100)
@@ -30,17 +33,18 @@ def escreveArquivo():
     mutacao = 15
     elitismo = 5
     torneio = 3
-
-    matrizAlvo = np.block([[3,4,2, 5,6,8, 1,9,7], 
-                           [6,8,7, 9,1,3, 2,5,4], 
-                           [9,5,1, 4,7,2, 6,3,8], 
-                           [9,2,6, 8,5,1, 4,7,3],
-                           [3,4,5, 7,2,6, 8,9,1], 
-                           [8,1,7, 3,9,4, 2,6,5], 
-                           [6,8,5, 7,3,4, 2,1,9], 
-                           [4,7,9, 1,6,2, 5,3,8], 
-                           [1,2,3, 5,8,9, 7,4,6]])
     
+    fraseAlvo = "O Tejo e mais belo que o rio que corre pela minha aldeia,Mas o Tejo nao e mais belo que o rio que corre pela minha aldeia.Porque o Tejo nao e o rio que corre pela minha aldeia,O Tejo tem grandes navios,E nele navega ainda,Para aqueles que veem em tudo o que la nao esta,A memoria das naus.O Tejo desce de Espanha,E o Tejo entra no mar em Portugal.Toda a gente sabe isso.Mas poucos sabem qual e o rio da minha aldeia,E para onde ele vai,E donde ele vem.E por isso, porque pertence a menos gente,e mais livre e maior o rio da minha aldeia.Pelo Tejo vai se para o Mundo.Para alem do Tejo ha a America.E a fortuna daqueles que a encontram.Ninguem nunca pensou no que ha para alem.Do rio da minha aldeia.O rio da minha aldeia nao faz pensar em nada.Quem esta ao pe dele esta so ao pe dele." #784
+
+    # Trecho adaptado da música "De Volta Para o Futuro" de Fabio Brazza
+    #fraseAlvo = "Eram la pelos anos tres mil e o mundo era mais ou menos aquilo que Nostradamus previu.O ser humano frio,num andar robotico,um olhar vazio,um mundo caotico.Eu vi a manipulacao genetica definir antes de nascer,o nosso ser e nossa estetica.Humanidade cetica,desafiando a etica,como se nao passassemos de uma mera formula aritmetica.Vi cidades sendo engolidas pelos mares com o desaparecimento das calotas polares.Eu vi cameras ate no ceu,o verdadeiro Big Brother,como descrito por George Orwel.Seguimos a natureza fria da profecia maquiavelica e a maior industria do mundo continuava sendo a belica." #596
+
+    # Trecho do livro "Em Algum Lugar Nas Estrelas" de Clare Vanderpool
+    #fraseAlvo = "A grande ursa negra,impressionante como a Ursa Maior,balancou a cabeca de um lado para o outro,e seu rugido fez tremer a paisagem proxima da Trilha Apalache.Eu digo que e ela,mas a verdade e que nao dava para ter certeza.Nao haviam marcas que inidicavam que era femea.Nao havia filhotes a vista.Mas eu sabia.Eu a conhecia como conhecia minha propria mae.Era sua vontade inabalavel de nos manter vivos." #401
+
+    # Trecho da música "Jesus Chorou" de Racionais MC's
+    #fraseAlvo = "O que e, o que e?Clara e salgada,cabe em um olho e pesa uma tonelada.Tem sabor de mar,pode ser discreta.Inquilina da dor,morada predileta.Na calada ela vem,refem da vinganca,irma do desespero,rival da esperança." #211
+
     try:
         # Gera o arquivo entrada.in para escrita
         with open('entrada.in', 'wb') as arquivo:
@@ -49,9 +53,9 @@ def escreveArquivo():
             arquivo.write(mutacao.to_bytes(4, byteorder='big'))
             arquivo.write(elitismo.to_bytes(4, byteorder='big'))
             arquivo.write(torneio.to_bytes(4, byteorder='big'))
-            np.save(arquivo, matrizAlvo) # Salva a matriz alvo no arquivo
+            arquivo.write(fraseAlvo.encode()) #converte a string para bytes
         # Estrutura with fecha o arquivo automaticamente
-    except Exception as e: # Caso haja erro na criação do arquivo metricas.in
+    except Exception as e: #caso haja erro na criação do arquivo metricas.in
         print(f"Problemas na criação do arquivo {e}\n")
 
 '''
@@ -60,7 +64,7 @@ def escreveArquivo():
         do melhor indivíduo obtido.
     Parâmetros: 
         tempo - tempo gasto na execução do programa.
-        fitness - quantidade de caracteres (números) distintos entre a matriz alvo e o indivíduo mais adaptado da População.
+        fitness - número de caracteres distintos da frase alvo do indivíduo mais adaptado da População.
     Retorno:
         Nulo.
 '''
@@ -90,24 +94,25 @@ def escreveRelatorio(tempo, fitness):
     Retorno:
         Instância da classe PARAMETROS com os parâmetros lidos.
 '''
+#função para ler o arquivo entrada.in
 def leArquivo():
     try:
         parametros = PARAMETROS()
         # Lê o arquivo entrada.in
         with open('entrada.in', 'rb') as arquivo:
-            populacao = arquivo.read(4) 
+            populacao = arquivo.read(4) #deixar só arquivo.read(4)
             geracoes = arquivo.read(4)
             mutacao = arquivo.read(4)
             elitismo = arquivo.read(4)
             torneio = arquivo.read(4)
-            matrizAlvo = np.load(arquivo) # Lê a matriz alvo do arquivo
+            fraseAlvo = arquivo.read(TAMANHO).decode('utf-8').rstrip('\x00')
 
             parametros.populacao = int.from_bytes(populacao, byteorder='big')
             parametros.geracoes = int.from_bytes(geracoes, byteorder='big')
             parametros.mutacao = int.from_bytes(mutacao, byteorder='big')
             parametros.elitismo = int.from_bytes(elitismo, byteorder='big')
             parametros.torneio = int.from_bytes(torneio, byteorder='big')
-            parametros.matrizAlvo = matrizAlvo
+            parametros.fraseAlvo = fraseAlvo
     
     except FileNotFoundError as e:
         print(f"Arquivo {e} não foi encontrado.\n")    
@@ -116,56 +121,58 @@ def leArquivo():
 
 '''
     Função fitness:
-        Calcula o fitness de um indivíduo baseado no número de caracteres (números) distintos entre 
-        a matriz alvo e a matriz cópia. Quanto menor o número de caracteres distintos, melhor 
-        o fitness.
+        Calcula o fitness de um indivíduo baseado no número de caracteres distintos entre 
+        a frase alvo e a frase cópia. Quanto menor o número de caracteres distintos, melhor 
+        o fitness. Ambas as frases estão representadas como arrays numéricos para melhor 
+        compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros: 
-        matriz - matriz do indivíduo a ser avaliado.
-        matrizAlvo - matriz alvo.
+        fraseArray - frase representada como array numérico do indivíduo a ser avaliado.
+        fraseAlvoAray - frase alvo representada como array numérico.
     Retorno:
-        Número de caracteres distintos entre a matriz alvo e a matriz cópia.
+        Número de caracteres distintos entre a frase alvo e a frase cópia.
 '''
 @njit
-def fitness(matriz, matrizAlvo):
-    matrizUnidimensional = matriz.flatten() # .flatten() converte a matriz em um array unidimensional
-    matrizAlvoUnidimensional = matrizAlvo.flatten()
+def fitness(fraseArray, fraseAlvoAray):
     quantidadeDistintos = 0
+    tamanhoCopia = len(fraseArray)
+    tamanhoAlvo = len(fraseAlvoAray)
 
-    tamanho = len(matrizUnidimensional) if len(matrizUnidimensional) == len(matrizAlvoUnidimensional) else min(len(matrizUnidimensional), len(matrizAlvoUnidimensional))
-
-    for i in range(tamanho):
-        if matrizUnidimensional[i] != matrizAlvoUnidimensional[i]:
+    tamanhoMin = min(tamanhoCopia, tamanhoAlvo)
+    for i in range(tamanhoMin):
+        if fraseArray[i] != fraseAlvoAray[i]:
             quantidadeDistintos += 1
 
-    # Caso haja algum indivíduo com uma matriz de tamanho inesperado:
-    quantidadeDistintos += abs(len(matrizUnidimensional) - len(matrizAlvoUnidimensional))
+    # Penalidade pela diferença de tamanho
+    quantidadeDistintos += abs(tamanhoCopia - tamanhoAlvo)
 
     return quantidadeDistintos
 
 '''
     Função mutacaoAuxiliar:
-        Altera aleatoriamente um gene (número) da matriz do filho, substituindo-o
-        por um valor aleatório correspondente a um dos caracteres presentes no intervalo
-        numérico da matriz alvo.
+        Altera aleatoriamente um gene (número) da frase do filho, substituindo-o
+        por um valor aleatório correspondente a um dos caracteres presentes no alfabeto
+        da frase alvo. Ambas as frases estão representadas como arrays numéricos para 
+        melhor compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros:
-        matriz - matriz do indivíduo a ser avaliado.
+        fraseArray - frase representada como array numérico do indivíduo a ser avaliado.
         taxaMutacao - taxa de mutação (1 a 100).
-        numerosValidos - número de caracteres disponíveis para a mutação.
+        tamanhoFraseAlvo - tamanho da frase alvo.
+        tamanhoAlfabeto - número de caracteres disponíveis para a mutação.
     Retorno:
-        Matriz após ser mutada.
+        Frase após ser mutada.
 '''
 @njit
-def mutacaoAuxiliar(matriz, taxaMutacao, numerosValidos):
-    # Matriz auxiliar
-    novaMatriz = matriz.flatten().copy()
+def mutacaoAuxiliar(fraseArray, taxaMutacao, tamanhoAlfabeto):
+    # Frase auxiliar
+    novaFraseArray = fraseArray.copy()
     
     # Verifica se ocorrerá mutação baseado na taxa
-    if np.random.randint(0, 100) < taxaMutacao:
-        posicao = np.random.randint(len(novaMatriz))
-        novoValor = np.random.choice(numerosValidos) # Escolhe um valor aleatório da matriz original
-        novaMatriz[posicao] = novoValor
+    if np.random.randint(0, 100) <= taxaMutacao and tamanhoAlfabeto > 0:
+        posicao = np.random.randint(len(novaFraseArray))
+        novoValor = np.random.randint(0, tamanhoAlfabeto)
+        novaFraseArray[posicao] = novoValor
         
-    return novaMatriz # Retorna matriz unidimensional mutada
+    return novaFraseArray
 
 '''
     Função mutacao:
@@ -177,43 +184,41 @@ def mutacaoAuxiliar(matriz, taxaMutacao, numerosValidos):
         Indivíduo mutado.
 '''
 def mutacao(filho, parametros):
-    individuo = INDIVIDUO(filho.fitness, filho.matriz)
+    individuo = INDIVIDUO(filho.fitness, filho.fraseArray)
 
-    # Certifica que a matriz do filho não é None
-    if filho.matriz is None:
+    # Certifica que temos a representação de array
+    if filho.fraseArray is None:
         return INDIVIDUO(filho.fitness, None) # Retorna cópia sem array se original não tem
 
-    # Realiza a mutação da matriz unidimensional do filho
-    matrizMutada = mutacaoAuxiliar(filho.matriz, parametros.mutacao, parametros.numerosValidos)
-    
-    individuo.matriz = matrizMutada.reshape((9, 9)) # Transforma o array unidimensional em matriz 9x9
+    # Aplica mutação na representação numérica
+    individuo.fraseArray = mutacaoAuxiliar(filho.fraseArray, parametros.mutacao, parametros.quantidadeLetras)
 
     return individuo
 
 '''
     Função recombinacaoUniformeAuxiliar:
-        Combina aleatoriamente os genes da matriz pai e mãe no filho.
+        Combina aleatoriamente os genes da frase pai e mãe no filho. Ambas as frases
+        estão representadas como arrays numéricos para melhor compatibilidade com a 
+        biblioteca numba, usada para otimizar o código.
     Parâmetros:
-        matrizPai - matriz do pai.
-        matrizMae - matriz da mãe.
-        tamanho - tamanho da matriz alvo.
+        frasePaiArray - frase do pai representada como array numérico.
+        fraseMaeArray - frase da mãe representada como array numérico.
+        tamanho - tamanho da frase alvo.
     Retorno:
-        Matriz do filho resultante da combinação entre pai e mãe.
+        Frase do filho resultante da combinação entre pai e mãe (representada como array numérico).
 '''
 @njit
-def recombinacaoUniformeAuxiliar(matrizPai, matrizMae, tamanho):
-    matrizPaiUnidimensional = matrizPai.flatten()
-    matrizMaeUnidimensional = matrizMae.flatten()
-    comprimentoMax = min(len(matrizPaiUnidimensional), len(matrizMaeUnidimensional), tamanho)
-    filho = np.empty(comprimentoMax, dtype=matrizPaiUnidimensional.dtype)
+def recombinacaoUniformeAuxiliar(frasePaiArray, fraseMaeArray, tamanho):
+    comprimentoMax = min(len(frasePaiArray), len(fraseMaeArray), tamanho)
+    filhoArray = np.empty(comprimentoMax, dtype=frasePaiArray.dtype)
     
     for i in range(comprimentoMax):
         if np.random.randint(0, 2) == 1:
-            filho[i] = matrizPaiUnidimensional[i]
+            filhoArray[i] = frasePaiArray[i]
         else:
-            filho[i] = matrizMaeUnidimensional[i]
+            filhoArray[i] = fraseMaeArray[i]
             
-    return filho # Retorna filho como array unidimensional                                                                                                                                          
+    return filhoArray                                                                                                                                               
 
 '''
     Função recombinacaoUniforme:
@@ -221,21 +226,18 @@ def recombinacaoUniformeAuxiliar(matrizPai, matrizMae, tamanho):
     Parâmetros:
         pai - um dos indivíduos da população.
         mae - um dos indivíduos da população.
-        numero - tamanho da matriz alvo.
+        numero - tamanho da frase alvo.
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacaoUniforme(pai, mae, numero):
+def recombinacaoUniforme(pai, mae, numero, parametros):
     filho = INDIVIDUO()
 
     # Certifica que os pais têm representação de array
-    if pai.matriz is None or mae.matriz is None:
+    if pai.fraseArray is None or mae.fraseArray is None:
         return INDIVIDUO() # Retorna indivíduo vazio
 
-    # Realiza a recombinação da matriz unidimensional do filho
-    matrizFilho = recombinacaoUniformeAuxiliar(pai.matriz, mae.matriz, numero)
-    
-    filho.matriz = matrizFilho.reshape((9, 9)) # Transforma o array unidimensional em matriz 9x9
+    filho.fraseArray = recombinacaoUniformeAuxiliar(pai.fraseArray, mae.fraseArray, numero)
 
     return filho
 
@@ -243,7 +245,7 @@ def recombinacaoUniforme(pai, mae, numero):
     Função selecaoPorTorneio:
         Seleciona dois a dois indivíduos da população e determina qual deles possui o menor fitness.
     Parâmetros:
-        populacao - população de indivíduos (matrizes cópias).
+        populacao - população de indivíduos (frases cópias).
         parametros - classe PARAMETROS.
     Retorno:
         Retorna o indivíduo com o menor fitness entre os selecionados.
@@ -265,7 +267,7 @@ def selecaoPorTorneio(populacao, parametros):
         e recombinação na função reprodução e ordena por adaptação (indivíduos mais adaptados 
         ocupam posições iniciais).
     Parâmetros:
-        população - população de indivíduos (matrizes cópias).
+        população - população de indivíduos (frases cópias).
         parametros - classe PARAMETROS.
     Retorno:
         Número de indivíduos selecionados.
@@ -280,7 +282,7 @@ def elitismo(populacao, parametros):
     Função reproducao:
         Aplica as funções de elitismo, torneio, recombinação e mutação na população.
     Parâmetros:
-        populacao - população de indivíduos (matrizes cópias).
+        populacao - população de indivíduos (frases cópias).
         parametros - classe PARAMETROS.
     Retorno:
         Retorna o melhor indivíduo da população.
@@ -294,92 +296,92 @@ def reproducao(populacao, parametros):
 
     taxaDeElitismo = elitismo(populacao, parametros)
 
-    melhor = INDIVIDUO(fitness=populacao[0].fitness, matriz=np.copy(populacao[0].matriz))
-
-    tamanhoAlvo = len(parametros.matrizAlvo.flatten())
+    melhor = populacao[0]
 
     for i in range(taxaDeElitismo):
-        novaPopulacao[i] = INDIVIDUO(populacao[i].fitness, np.copy(populacao[i].matriz))
+        novaPopulacao[i] = INDIVIDUO(populacao[i].fitness, np.copy(populacao[i].fraseArray))
 
     for i in range(taxaDeElitismo, parametros.populacao):
         pai = selecaoPorTorneio(populacao, parametros)
         mae = selecaoPorTorneio(populacao, parametros)
-        filho = recombinacaoUniforme(pai, mae, tamanhoAlvo)
+        filho = recombinacaoUniforme(pai, mae, len(parametros.fraseAlvoArray), parametros)
         filho = mutacao(filho, parametros)
-        filho.fitness = fitness(filho.matriz, parametros.matrizAlvo)
+        filho.fitness = fitness(filho.fraseArray, parametros.fraseAlvoArray)
 
-        novaPopulacao[i] = filho
-        
         if filho.fitness < melhor.fitness:
-            melhor = INDIVIDUO(fitness=filho.fitness, matriz=np.copy(filho.matriz))
+            melhor = filho
+        novaPopulacao[i] = filho
 
-    for i in range(parametros.populacao):
+    for i in range(taxaDeElitismo, parametros.populacao):
         populacao[i] = novaPopulacao[i]
 
     return melhor
 
 '''
-    Função geraMatrizesAleatorias:
-        Gera matrizes aleatórias de tamanho definido, utilizando os caracteres disponíveis
-        no intervalo numérico.
+    Função geraFrasesAleatorias:
+        Gera frases aleatórias de tamanho definido, utilizando os caracteres disponíveis
+        no alfabeto. As frases geradas são representadas como arrays numéricos para 
+        melhor compatibilidade com a biblioteca numba, usada para otimizar o código.
     Parâmetros:
-        tamanhoPopulacao - número de matrizes a serem geradas.
-        numerosValidos - número de caracteres distintos na matriz alvo.
+        tamanhoPopulacao - número de frases a serem geradas.
+        tamanhoFrase - tamanho de cada frase (representada em array numérico).
+        numLetras - número de caracteres distintos na frase alvo.
     Retorno:
-        Lista de matrizes aleatórias geradas.
+        Lista de frases aleatórias geradas.
 '''
 @njit
-def geraMatrizesAleatorias(tamanhoPopulacao, numerosValidos):
-    
-    # Caso os números válidos sejam uma lista vazia, retorna uma matriz de zeros
-    if len(numerosValidos) == 0:
-        return np.zeros((tamanhoPopulacao, 9, 9), dtype=np.int64)
-
-    matrizes = np.empty((tamanhoPopulacao, 9, 9), dtype=numerosValidos.dtype)
+def geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, numLetras):
+    frases = [np.empty(tamanhoFrase, dtype=np.int64) for _ in range(tamanhoPopulacao)]
     for i in range(tamanhoPopulacao):
-        matrizes[i, :, :] = np.random.choice(numerosValidos, size=(9, 9))
+        frases[i] = np.random.randint(0, numLetras, size=tamanhoFrase)
 
-    return matrizes
+    return frases
 
 '''
     Função inicializa:
-        Utiliza a função geraMatrizesAleatorias para inicializar a população com matrizes 
-        aleatórias de tamanho definido e calcula o fitness de cada uma delas.
+        Utiliza a função geraFrasesAleatorias para inicializar a população com frases 
+        aleatórias (representadas como arrays numéricos) de tamanho definido e 
+        calcula o fitness de cada uma delas.
     Parâmetros:
-        populacao - população de indivíduos (matrizes cópias).
+        populacao - população de indivíduos (frases cópias).
         parametros - classe PARAMETROS.
     Retorno:
         Nulo.
 '''
 
 def inicializa(populacao, parametros):
-    intervaloNumeros = parametros.numerosValidos
+    numLetras = parametros.quantidadeLetras
+    tamanhoFrase = len(parametros.fraseAlvo)
     tamanhoPopulacao = parametros.populacao
     
-    matrizesGeradas = geraMatrizesAleatorias(tamanhoPopulacao, intervaloNumeros)
+    frasesGeradas = geraFrasesAleatorias(tamanhoPopulacao, tamanhoFrase, numLetras)
     
     for i in range(tamanhoPopulacao):
         populacao[i] = INDIVIDUO()
-        populacao[i].matriz = matrizesGeradas[i]
-        populacao[i].fitness = fitness(populacao[i].matriz, parametros.matrizAlvo)
+        populacao[i].fraseArray = frasesGeradas[i]
+        populacao[i].fitness = fitness(populacao[i].fraseArray, parametros.fraseAlvoArray)
         
 '''
-    Função intervaloNumeros:
-        Determina quais caracteres compõem a matriz alvo.
+    Função alfabeto:
+        Determina quais caracteres compõem a frase alvo.
     Parâmetros:
         parametros - classe PARAMETROS.
     Retorno:
-        Retorna a classe PARAMETROS com os números válidos.
+        Retorna a classe PARAMETROS com a quantidade de letras, mapeamento 
+        entre char <-> int e frase alvo convertida em array numérico.
 '''
-def intervaloNumeros(parametros):
+def alfabeto(parametros):
+    alfabeto = "".join(sorted(set(parametros.fraseAlvo)))
     
-    if parametros.matrizAlvo is not None:
-        numerosDistintos = np.unique(parametros.matrizAlvo.flatten())
-        parametros.numerosValidos = numerosDistintos.astype(np.int64)
-    else:
-        # Fallback importante se matrizAlvo não estiver definida
-        print("Aviso: matrizAlvo não definida. Usando números padrão 1-9 para Sudoku.")
-        parametros.numerosValidos = np.arange(1, 10, dtype=np.int64) # 1 a 9
+    parametros.quantidadeLetras = len(alfabeto)
+
+    # Cria mapeamentos char <-> int
+    parametros.charToInt = {char: i for i, char in enumerate(alfabeto)}
+    parametros.intToChar = np.array(list(alfabeto), dtype=str) # Array para mapeamento reverso rápido
+
+    # Converter fraseAlvo para array numérico (mantendo a string original)
+    parametros.fraseAlvoArray = np.array([parametros.charToInt[c] for c in parametros.fraseAlvo], dtype=np.int32)
+    
 
     return parametros
 
@@ -406,21 +408,27 @@ def main():
     #np.random.seed(0) # Semente fixa para testes
     #setSeed(0) # Semente fixa para testes
     
+    
     inicio = time.time()
 
     escreveArquivo()
     parametros = leArquivo()
-    parametros = intervaloNumeros(parametros)
+    parametros = alfabeto(parametros)
+
+    #print(f"{len(parametros.fraseAlvo)}\n")
 
     geracao = 0
     populacao = [INDIVIDUO() for _ in range(parametros.populacao)]
 
     np.random.seed(int(time.time())) # Semente de acordo com o tempo de máquina
     inicializa(populacao, parametros)
+
     while geracao <= parametros.geracoes:
         melhor = reproducao(populacao, parametros)
         print(f"\nIteracao {geracao}, melhor fitness {melhor.fitness}.\n")
-        print(f"{melhor.matriz}\n")
+        # Converte a frase do melhor indivíduo para string
+        melhorFrase = "".join(parametros.intToChar[melhor.fraseArray]) if melhor.fraseArray is not None else "N/A"
+        print(f"{melhorFrase}\n")
         geracao += 1
         if melhor.fitness == 0:
             break

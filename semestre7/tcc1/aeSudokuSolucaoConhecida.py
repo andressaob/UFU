@@ -18,8 +18,8 @@ class Parametros:
         self.celulas_vazias1d = celulas_vazias1d # Posições das células vazias na matriz base em formato unidimensional
         self.populacao = populacao # Tamanho da população
         self.geracoes = geracoes # Número de gerações
-        self.elitismo = elitismo # Taxa de elitismo (1 a 100)
-        self.mutacao = mutacao # Taxa de mutação (1 a 100)
+        self.elitismo = elitismo # Taxa de elitismo (0 a 99)
+        self.mutacao = mutacao # Taxa de mutação (0 a 99)
         self.torneio = torneio # Número de participantes da seleção por torneio
 
 '''
@@ -29,8 +29,8 @@ class Parametros:
 def escreve_arquivo():
     populacao = 600
     geracoes = 200
-    mutacao = 0.125
-    elitismo = 15
+    mutacao = 0.0625
+    elitismo = 5
     torneio = 3
 
     matriz_base = np.block([[0,8,4, 0,7,2, 1,0,5], 
@@ -52,7 +52,6 @@ def escreve_arquivo():
         with open('entrada.in', 'wb') as arquivo:
             arquivo.write(populacao.to_bytes(4, byteorder='big')) 
             arquivo.write(geracoes.to_bytes(4, byteorder='big'))
-            #arquivo.write(mutacao.to_bytes(4, byteorder='big'))
             arquivo.write(struct.pack('>f', mutacao))
             arquivo.write(elitismo.to_bytes(4, byteorder='big'))
             arquivo.write(torneio.to_bytes(4, byteorder='big'))
@@ -114,7 +113,6 @@ def le_arquivo():
 
             parametros.populacao = int.from_bytes(populacao, byteorder='big')
             parametros.geracoes = int.from_bytes(geracoes, byteorder='big')
-            #parametros.mutacao = int.from_bytes(mutacao, byteorder='big')
             parametros.mutacao = struct.unpack('>f', mutacao)[0]
             parametros.elitismo = int.from_bytes(elitismo, byteorder='big')
             parametros.torneio = int.from_bytes(torneio, byteorder='big')
@@ -188,8 +186,9 @@ def fitness(matriz):
 
 '''
     Função mutacao_auxiliar:
-        Altera aleatoriamente um gene (número) não fixo da matriz do filho, substituindo-o
-        por um valor aleatório correspondente a um dos números válidos do Sudoku.
+        Faz a mutação por Reset Aleatório,  que altera aleatoriamente um gene 
+        (número) não fixo da matriz do filho, substituindo-o por um valor aleatório
+        correspondente a um dos números válidos do Sudoku.
     Parâmetros:
         matriz - matriz do indivíduo a ser avaliado.
         taxa_mutacao - taxa de mutação (1 a 100).
@@ -202,9 +201,10 @@ def fitness(matriz):
 def mutacao_auxiliar(matriz, taxa_mutacao, numeros_validos, celulas_vazias1d):
     # Matriz auxiliar
     nova_matriz = matriz.flatten().copy()
+    probabilidade_mutacao = taxa_mutacao/100
     
     # Verifica se ocorrerá mutação baseado na taxa
-    if np.random.randint(0, 100) < taxa_mutacao:
+    if np.random.random() < probabilidade_mutacao:
         if len(celulas_vazias1d) > 0: # Verifica se há células vazias para mutação
             indiceAleatorio = np.random.randint(len(celulas_vazias1d))
             posicao = celulas_vazias1d[indiceAleatorio] # Escolhe uma posição aleatória da matriz base original
@@ -238,8 +238,8 @@ def mutacao(filho, parametros):
 
 '''
     Função recombinacao_uniforme_auxiliar:
-        Combina aleatoriamente os genes da matriz pai e mãe nas células do filho 
-        que podem ser recombinadas, ou seja, que não são fixas.
+        Aplica a recombinação uniforme, combinando aleatoriamente os genes (cada célula)
+        da matriz pai e mãe nas células do filho que podem ser recombinadas, ou seja, que não são fixas.
     Parâmetros:
         matriz_pai - matriz do pai.
         matriz_mae - matriz da mãe.

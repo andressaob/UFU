@@ -26,11 +26,11 @@ class Parametros:
     Função escreve_arquivo:
         Escreve no arquivo entrada.in a matriz base alvo e os parâmetros especificados.
 '''
-'''def escreve_arquivo():
+def escreve_arquivo():
     populacao = 600
     geracoes = 200
     mutacao = 5
-    elitismo = 20
+    elitismo = 5
     torneio = 3
 
     matriz_base = np.block([[0,8,4, 0,7,2, 1,0,5], 
@@ -61,7 +61,7 @@ class Parametros:
             np.save(arquivo, celulas_vazias1d) # Salva as células vazias 1D no arquivo)
         # Estrutura with fecha o arquivo automaticamente
     except Exception as e: # Caso haja erro na criação do arquivo metricas.in
-        print(f"Problemas na criação do arquivo {e}\n")'''
+        print(f"Problemas na criação do arquivo {e}\n")
 
 '''
     Função escreve_relatorio:
@@ -105,7 +105,7 @@ def le_arquivo():
             geracoes = arquivo.read(4)
             mutacao = arquivo.read(4)
             elitismo = arquivo.read(4)
-            #torneio = arquivo.read(4)
+            torneio = arquivo.read(4)
             numeros_validos = np.load(arquivo) # Lê os números válidos do arquivo
             matriz_base = np.load(arquivo) # Lê a matriz base do arquivo
             celulas_vazias = np.load(arquivo) # Lê as células vazias do arquivo
@@ -115,7 +115,7 @@ def le_arquivo():
             parametros.geracoes = int.from_bytes(geracoes, byteorder='big')
             parametros.mutacao = struct.unpack('>f', mutacao)[0]
             parametros.elitismo = int.from_bytes(elitismo, byteorder='big')
-            #parametros.torneio = int.from_bytes(torneio, byteorder='big')
+            parametros.torneio = int.from_bytes(torneio, byteorder='big')
             parametros.numeros_validos = numeros_validos
             parametros.matriz_base = matriz_base
             parametros.celulas_vazias = celulas_vazias
@@ -185,39 +185,6 @@ def fitness(matriz):
     return repetidos
 
 '''
-    Função mutacao_por_troca_auxiliar:
-        Altera o genoma do indivíduo trocando os valores de duas posições
-        aleatórias que não são fixas na matriz
-    Parâmetros:
-        matriz - matriz do indivíduo a ser avaliado.
-        taxa_mutacao - taxa de mutação (0 a 99).
-        celulas_vazias1d - posições das células vazias na matriz base em formato unidimensional.
-    Retorno:
-        Matriz após ser mutada.
-'''
-
-
-'''@njit
-def mutacao_por_troca_auxiliar(matriz, taxa_mutacao, celulas_vazias1d):
-    nova_matriz = matriz.flatten().copy()
-
-    probabilidade_mutacao = taxa_mutacao/100
-    
-    # Verifica se ocorrerá mutação baseado na probabilidade
-    if np.random.random() <= probabilidade_mutacao:
-        # Garante que há pelo menos duas células para trocar
-        if len(celulas_vazias1d) >= 2:
-            indices_para_troca = np.random.choice(np.arange(len(celulas_vazias1d)), 2, replace=False) # replace=False garante que os índices são únicos
-            posicao1 = celulas_vazias1d[indices_para_troca[0]]
-            posicao2 = celulas_vazias1d[indices_para_troca[1]]
-            # Realiza a troca
-            valor_temp = nova_matriz[posicao1]
-            nova_matriz[posicao1] = nova_matriz[posicao2]
-            nova_matriz[posicao2] = valor_temp
-        
-    return nova_matriz # Retorna matriz unidimensional mutada ou a original se não ocorreu mutação'''
-
-'''
     Função mutacao_auxiliar:
         Faz a mutação por Reset Aleatório,  que altera aleatoriamente um gene 
         (número) não fixo da matriz do filho, substituindo-o por um valor aleatório
@@ -247,29 +214,6 @@ def mutacao_auxiliar(matriz, taxa_mutacao, numeros_validos, celulas_vazias1d):
     return nova_matriz # Retorna matriz unidimensional mutada
 
 '''
-    Função mutacao_por_troca:
-        Utiliza a função mutacao_por_troca_auxiliar para realizar a mutação de um indivíduo.
-    Parâmetros:
-        filho - um dos indivíduos da população.
-        parametros - classe Parametros.
-    Retorno:
-        Indivíduo mutado.
-'''
-'''def mutacao_por_troca(filho, parametros):
-    individuo = Individuo(filho.fitness, filho.matriz)
-
-    # Certifica que a matriz do filho não é None
-    if filho.matriz is None:
-        return Individuo(filho.fitness, None) # Retorna cópia sem array se original não tem
-
-    # Realiza a mutação da matriz unidimensional do filho
-    matriz_mutada = mutacao_por_troca_auxiliar(filho.matriz, parametros.mutacao, parametros.celulas_vazias1d)
-    
-    individuo.matriz = matriz_mutada.reshape((9, 9)) # Transforma o array unidimensional em matriz 9x9
-
-    return individuo'''
-
-'''
     Função mutacao:
         Utiliza a função mutacao_auxiliar para realizar a mutação de um indivíduo.
     Parâmetros:
@@ -296,7 +240,7 @@ def mutacao(filho, parametros):
     Função recombinacao_ponto_de_corte_auxiliar:
         Combina os genes (valores nas células não fixas) do pai e da mãe utilizando
         a técnica de um ponto de corte, onde o filho herda os genes do pai até o ponto
-        de corte e os genes da mãe depois do ponto de corte. 
+        de corte e os genes da mãe depois do ponto de corte.
     Parâmetros:
         matriz_pai - matriz do pai.
         matriz_mae - matriz da mãe.
@@ -305,6 +249,7 @@ def mutacao(filho, parametros):
     Retorno:
         Matriz unidimensional do filho resultante da combinação entre pai e mãe.
 '''
+
 '''@njit
 def recombinacao_ponto_de_corte_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_vazias1d):
     # Extrai os genes dos pais
@@ -359,7 +304,7 @@ def recombinacao_ponto_de_corte_auxiliar(matriz_pai, matriz_mae, matriz_base, ce
     Retorno:
         Matriz do filho resultante da combinação entre pai e mãe.
 '''
-@njit
+'''@njit
 def recombinacao_uniforme_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_vazias1d):
     matriz_pai_unidimensional = matriz_pai.flatten()
     matriz_mae_unidimensional = matriz_mae.flatten()
@@ -372,7 +317,7 @@ def recombinacao_uniforme_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_
         else:
             filho[i] = matriz_mae_unidimensional[i]
             
-    return filho # Retorna filho como array unidimensional                                                                                                                           
+    return filho # Retorna filho como array unidimensional'''
 
 '''
     Função recombinacao_ponto_de_corte:
@@ -400,6 +345,128 @@ def recombinacao_uniforme_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_
     return filho'''
 
 '''
+    Função recombinacao_por_bloco_auxiliar:
+        Aplica a recombinação por bloco, onde cada bloco 3x3 é herdado aleatoriamente de um dos pais.
+    Parâmetros:
+        matriz_pai - matriz do pai.
+        matriz_mae - matriz da mãe.
+        matriz_base - matriz base.
+    Retorno:
+        Matriz do filho resultante da combinação entre pai e mãe.
+'''
+
+@njit
+def recombinacao_por_bloco_auxiliar(matriz_pai, matriz_mae, matriz_base):
+    filho = matriz_base.copy() # Cria uma cópia da matriz base como ponto de partida para o filho
+
+    # As variáveis 'i' e 'j' serão o canto superior esquerdo de cada bloco (0,0), (0,3), (3,6), etc.
+    for i in range(0, 9, 3):
+        for j in range(0, 9, 3):
+            # Para cada bloco, é sorteado aleatoriamente de qual pai ele ele herdará.
+            if np.random.randint(0, 2) == 0:
+                fonte_escolhida = matriz_pai
+            else:
+                fonte_escolhida = matriz_mae
+            # Copia o bloco do pai no filho (APENAS CÉLULAS VAZIAS).
+            for l in range(i, i + 3):      # Linhas dentro do bloco
+                for c in range(j, j + 3):  # Colunas dentro do bloco
+                    # Verifica na matriz_base se a célula era originalmente vazia (== 0).
+                    if matriz_base[l, c] == 0:
+                        # Se era vazia, copiamos o gene (número) do pai escolhido.
+                        filho[l, c] = fonte_escolhida[l, c]
+
+    return filho # Retorna filho como array unidimensional
+
+'''
+    Função recombinacao_por_bloco:
+        Utiliza a função recombinacao_por_bloco_auxiliar para realizar a recombinação
+        entre pai e mãe.
+    Parâmetros:
+        pai - um dos indivíduos da população.
+        mae - um dos indivíduos da população.
+        parametros - classe Parametros.
+    Retorno:
+        Indivíduo filho resultante da combinação entre pai e mãe.
+'''
+def recombinacao_por_bloco(pai, mae, parametros):
+    filho = Individuo()
+
+    # Garante que os pais são válidos para recombinação
+    if pai.matriz is None or mae.matriz is None:
+        return Individuo() # Retorna um indivíduo vazio
+
+    # Realiza a recombinação por bloco entre pai e mãe
+    matriz_filho = recombinacao_por_bloco_auxiliar(pai.matriz, mae.matriz, parametros.matriz_base)
+    
+    filho.matriz = matriz_filho
+
+    return filho
+
+'''
+
+    Função recombinacao_corte_por_bloco_auxiliar:
+        Combina os blocos do pai e da mãe utilizando a técnica de um ponto de corte,
+        onde o filho herda os blocos do pai até o ponto de corte e os blocos da mãe 
+        depois do ponto de corte.
+    Parâmetros:
+        matriz_pai - matriz do pai.
+        matriz_mae - matriz da mãe.
+        matriz_base - matriz base.
+    Retorno:
+        Matriz do filho resultante da combinação entre pai e mãe.
+'''
+@njit
+def recombinacao_corte_por_bloco_auxiliar(matriz_pai, matriz_mae, matriz_base):
+    filho = matriz_base.copy()
+
+    # O cromossomo aqui é a sequência de 9 blocos.
+    # Se o ponto de corte for 0, todos os blocos vêm da mãe.
+    # Se for 9, todos os blocos vêm do pai.
+    ponto_de_corte = np.random.randint(0, 10) # Sorteia um número entre 0 e 9
+
+    # Itera sobre os 9 blocos, de 0 a 8
+    for indice_bloco in range(9):
+        if indice_bloco < ponto_de_corte:
+            fonte_escolhida = matriz_pai
+        else:
+            fonte_escolhida = matriz_mae
+        # Calcula as coordenadas (i,j) do canto superior esquerdo do bloco
+        i = (indice_bloco // 3) * 3
+        j = (indice_bloco % 3) * 3
+
+        # Copia os valores do bloco do pai escolhido para o filho
+        for l in range(i, i + 3):      # Linhas dentro do bloco
+            for c in range(j, j + 3):  # Colunas dentro do bloco
+                # Verifica na matriz_base se a célula era originalmente vazia (== 0)
+                if matriz_base[l, c] == 0:
+                    filho[l, c] = fonte_escolhida[l, c]
+    
+    return filho
+
+'''
+    Função recombinacao_corte_por_bloco:
+        Utiliza a função recombinacao_corte_por_bloco_auxiliar para realizar a recombinação
+        entre pai e mãe.
+    Parâmetros:
+        pai - um dos indivíduos da população.
+        mae - um dos indivíduos da população.
+        parametros - classe Parametros.
+    Retorno:
+        Indivíduo filho resultante da combinação entre pai e mãe.
+'''
+def recombinacao_corte_por_bloco(pai, mae, parametros):
+    filho = Individuo()
+
+    if pai.matriz is None or mae.matriz is None:
+        return Individuo()
+
+    matriz_filho = recombinacao_corte_por_bloco_auxiliar(pai.matriz, mae.matriz, parametros.matriz_base)
+    
+    filho.matriz = matriz_filho
+
+    return filho
+
+'''
     Função recombinacao_uniforme:
         Utiliza a função recombinacao_uniforme_auxiliar para realizar a recombinação entre pai e mãe.
     Parâmetros:
@@ -409,7 +476,7 @@ def recombinacao_uniforme_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacao_uniforme(pai, mae, parametros):
+'''def recombinacao_uniforme(pai, mae, parametros):
     filho = Individuo()
 
     # Certifica que os pais têm representação de array
@@ -421,7 +488,8 @@ def recombinacao_uniforme(pai, mae, parametros):
     
     filho.matriz = matriz_filho.reshape((9, 9)) # Transforma o array unidimensional em matriz 9x9
 
-    return filho
+    return filho'''
+
 
 '''
     Função selecao_por_torneio:
@@ -432,7 +500,7 @@ def recombinacao_uniforme(pai, mae, parametros):
     Retorno:
         Retorna o indivíduo com o menor fitness entre os selecionados.
 '''
-'''def selecao_por_torneio(populacao, parametros):
+def selecao_por_torneio(populacao, parametros):
     melhor = Individuo()
     melhor.fitness = -1
 
@@ -441,7 +509,7 @@ def recombinacao_uniforme(pai, mae, parametros):
         if melhor.fitness == -1 or auxiliar.fitness < melhor.fitness:
             melhor = auxiliar
 
-    return melhor'''
+    return melhor
 
 '''
     Função selecao_por_roleta:
@@ -451,6 +519,7 @@ def recombinacao_uniforme(pai, mae, parametros):
         populacao - população de indivíduos (matrizes cópias).
     Retorno:
         Retorna o indivíduo selecionado pela roleta.
+'''
 '''
 def selecao_por_roleta(populacao):
     # Converte o fitness: um fitness menor (melhor) tem uma fatia maior.
@@ -476,7 +545,7 @@ def selecao_por_roleta(populacao):
 
     # Caso de imprecisão aritmética, retorna o último indivíduo.        
     return populacao[-1]
-
+'''
 '''
     Função elitismo:
         Calcula o número de indivíduos da população que não sofreram ação dos operadores de mutação 
@@ -519,14 +588,14 @@ def reproducao(populacao, parametros):
         nova_populacao[i] = Individuo(populacao[i].fitness, np.copy(populacao[i].matriz))
 
     for i in range(taxa_de_elitismo, parametros.populacao):
-        #pai = selecao_por_torneio(populacao, parametros)
-        #mae = selecao_por_torneio(populacao, parametros)
-        pai = selecao_por_roleta(populacao)
-        mae = selecao_por_roleta(populacao)
-        filho = recombinacao_uniforme(pai, mae, parametros)
+        pai = selecao_por_torneio(populacao, parametros)
+        mae = selecao_por_torneio(populacao, parametros)
+        #pai = selecao_por_roleta(populacao)
+        #mae = selecao_por_roleta(populacao)
+        #filho = recombinacao_uniforme(pai, mae, parametros)
         #filho = recombinacao_ponto_de_corte(pai, mae, parametros)
+        filho = recombinacao_corte_por_bloco(pai, mae, parametros)
         filho = mutacao(filho, parametros)
-        #filho = mutacao_por_troca(filho, parametros)
         filho.fitness = fitness(filho.matriz)
 
         nova_populacao[i] = filho

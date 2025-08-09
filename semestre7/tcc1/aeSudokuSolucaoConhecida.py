@@ -685,7 +685,7 @@ def main():
     
     inicio = time.time()
 
-    #escreve_arquivo()
+    escreve_arquivo()
     parametros = le_arquivo()
 
     geracao = 0

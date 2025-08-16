@@ -166,7 +166,7 @@ def fitness(matriz):
 
 '''
     Função mutacao_auxiliar:
-        Faz a mutação por Reset Aleatório,  que altera aleatoriamente um gene 
+        Faz a mutação por Reset Aleatório, que altera aleatoriamente um gene 
         (número) não fixo da matriz do filho, substituindo-o por um valor aleatório
         correspondente a um dos números válidos do Sudoku.
     Parâmetros:
@@ -178,7 +178,7 @@ def fitness(matriz):
         Matriz após ser mutada.
 '''
 @njit
-def mutacao_auxiliar(matriz, taxa_mutacao, numeros_validos, celulas_vazias1d):
+def mutacao_auxiliar(matriz, taxa_mutacao, numeros_validos, celulas_vazias1d): # Usada para testes
     # Matriz auxiliar
     nova_matriz = matriz.flatten().copy()
     probabilidade_mutacao = taxa_mutacao/100
@@ -202,7 +202,7 @@ def mutacao_auxiliar(matriz, taxa_mutacao, numeros_validos, celulas_vazias1d):
     Retorno:
         Indivíduo mutado.
 '''
-def mutacao(filho, parametros):
+def mutacao(filho, parametros): # Usada para testes
     individuo = Individuo(filho.fitness, filho.matriz)
 
     # Certifica que a matriz do filho não é None
@@ -228,7 +228,7 @@ def mutacao(filho, parametros):
         Matriz após ser mutada.
 '''
 @njit
-def mutacao_por_troca_auxiliar(matriz, taxa_mutacao, celulas_vazias1d):
+def mutacao_por_troca_auxiliar(matriz, taxa_mutacao, celulas_vazias1d): # Usada para testes
     nova_matriz = matriz.flatten().copy()
 
     probabilidade_mutacao = taxa_mutacao/100
@@ -256,7 +256,7 @@ def mutacao_por_troca_auxiliar(matriz, taxa_mutacao, celulas_vazias1d):
     Retorno:
         Indivíduo mutado.
 '''
-def mutacao_por_troca(filho, parametros):
+def mutacao_por_troca(filho, parametros): # Usada para testes
     individuo = Individuo(filho.fitness, filho.matriz)
 
     # Certifica que a matriz do filho não é None
@@ -362,7 +362,7 @@ def recombinacao_uniforme_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacao_uniforme(pai, mae, parametros):
+def recombinacao_uniforme(pai, mae, parametros): # Teve o melhor desempenho nos testes
     filho = Individuo()
 
     # Certifica que os pais têm representação de array
@@ -393,7 +393,7 @@ def recombinacao_uniforme(pai, mae, parametros):
 '''
 
 @njit
-def recombinacao_ponto_de_corte_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_vazias1d):
+def recombinacao_ponto_de_corte_auxiliar(matriz_pai, matriz_mae, matriz_base, celulas_vazias1d): # Usada para testes
     # Extrai os genes dos pais
     genes_pai = matriz_pai.flatten()[celulas_vazias1d]
     genes_mae = matriz_mae.flatten()[celulas_vazias1d]
@@ -445,7 +445,7 @@ def recombinacao_ponto_de_corte_auxiliar(matriz_pai, matriz_mae, matriz_base, ce
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacao_ponto_de_corte(pai, mae, parametros): # Teve o melhor desempenho nos testes
+def recombinacao_ponto_de_corte(pai, mae, parametros): # Usada para testes
     filho = Individuo()
 
     # Certifica que os pais têm matrizes para recombinar
@@ -460,7 +460,7 @@ def recombinacao_ponto_de_corte(pai, mae, parametros): # Teve o melhor desempenh
     return filho
 
 @njit
-def recombinacao_por_bloco_auxiliar(matriz_pai, matriz_mae, matriz_base):
+def recombinacao_por_bloco_auxiliar(matriz_pai, matriz_mae, matriz_base): # Usada para testes
     filho = matriz_base.copy() # Células fixas do filho são as mesmas da matriz base
     passo = 3 # Tamanho do bloco
 
@@ -486,7 +486,7 @@ def recombinacao_por_bloco_auxiliar(matriz_pai, matriz_mae, matriz_base):
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacao_por_bloco(pai, mae, parametros):
+def recombinacao_por_bloco(pai, mae, parametros): # Usada para testes
     filho = Individuo()
 
     if pai.matriz is None or mae.matriz is None:
@@ -511,7 +511,7 @@ def recombinacao_por_bloco(pai, mae, parametros):
         Matriz do filho resultante da combinação entre pai e mãe.
 '''
 @njit
-def recombinacao_bloco_1_ponto_auxiliar(matriz_pai, matriz_mae, matriz_base):
+def recombinacao_bloco_1_ponto_auxiliar(matriz_pai, matriz_mae, matriz_base): # Usada para testes
     filho = matriz_base.copy()
     passo = 3 # Tamanho do bloco
 
@@ -550,7 +550,7 @@ def recombinacao_bloco_1_ponto_auxiliar(matriz_pai, matriz_mae, matriz_base):
     Retorno:
         Indivíduo filho resultante da combinação entre pai e mãe.
 '''
-def recombinacao_bloco_1_ponto(pai, mae, parametros):
+def recombinacao_bloco_1_ponto(pai, mae, parametros): # Usada para testes
     filho = Individuo()
 
     if pai.matriz is None or mae.matriz is None:
@@ -571,7 +571,7 @@ def recombinacao_bloco_1_ponto(pai, mae, parametros):
     Retorno:
         Retorna o indivíduo com o menor fitness entre os selecionados.
 '''
-def selecao_por_torneio(populacao, parametros):
+def selecao_por_torneio(populacao, parametros): # Teve o melhor desempenho
     melhor = Individuo()
     melhor.fitness = -1
 
@@ -591,7 +591,7 @@ def selecao_por_torneio(populacao, parametros):
     Retorno:
         Retorna o indivíduo selecionado pela roleta.
 '''
-def selecao_por_roleta(populacao):
+def selecao_por_roleta(populacao): # Usada para testes
     # Converte o fitness: um fitness menor (melhor) tem uma fatia maior.
     # Adição de 1.0 para evitar divisão por zero se o fitness for 0.
     aptidoes = [1.0 / (1.0 + individuo.fitness) for individuo in populacao]

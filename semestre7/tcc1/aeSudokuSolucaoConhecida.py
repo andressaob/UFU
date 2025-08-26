@@ -711,6 +711,53 @@ def gera_matrizes_aleatorias(tamanho_populacao, numeros_validos, matriz_base, ce
     return matrizes
 
 '''
+    Função gera_matrizes_aleatorias:
+        Função alternativa que implementa a inicialização em que os números da subgrade não são repetidos.
+    Parâmetros:
+        numeros_validos - número de caracteres distintos na matriz alvo.
+    Retorno:
+        Lista de matrizes aleatórias geradas.
+'''
+@njit
+def gera_matrizes_aleatorias(tamanho_populacao, numeros_validos, matriz_base, celulas_vazias):
+    matrizes = []
+    passo = 3 # Define o tamanho da submatriz (3x3)
+    tamanho_matriz = len(matriz_base) # Tamanho da matriz (9x9)
+
+
+    for _ in range(tamanho_populacao):
+        # Começa com uma cópia nova da matriz base para cada indivíduo
+        matriz_individuo = matriz_base.copy()
+        # Itera sobre cada bloco 3x3 da matriz
+        for i in range(0, tamanho_matriz, passo):
+            for j in range(0, tamanho_matriz, passo):
+                # Extrai a submatriz atual
+                submatriz = matriz_individuo[i:i+passo, j:j+passo]
+                # Encontra os números que já estão fixos no bloco
+                numeros_presentes = set()
+                for valor in submatriz.flatten():
+                    if valor != 0:
+                        numeros_presentes.add(valor)
+                # Determina quais números estão faltando para preencher o bloco
+                numeros_faltantes = []
+                for numero in numeros_validos:
+                    if numero not in numeros_presentes:
+                        numeros_faltantes.append(numero)
+                # Embaralha aleatoriamente os números que faltam
+                np.random.shuffle(np.array(numeros_faltantes))
+                # Preenche as células vazias do bloco com os números embaralhados
+                indice_faltante = 0
+                for l in range(passo):
+                    for c in range(passo):
+                        if matriz_individuo[i+l, j+c] == 0:
+                            matriz_individuo[i+l, j+c] = numeros_faltantes[indice_faltante]
+                            indice_faltante += 1
+                            
+        matrizes.append(matriz_individuo)
+        
+    return matrizes
+    
+'''
     Função inicializa:
         Utiliza a função gera_matrizes_aleatorias para inicializar a população com matrizes 
         aleatórias de tamanho definido e calcula o fitness de cada uma delas.

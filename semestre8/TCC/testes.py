@@ -120,7 +120,7 @@ def main():
     script_a_executar = 'agSudokuReplicacao.py'
     num_execucoes_por_teste = 4
     diretorio_base_saida = os.path.expanduser('~/caminho/para/salvar/resultados')  # Altere para o diretório desejado
-    os.makedirs(diretorio_base_saida, exist_ok=True)
+    #os.makedirs(diretorio_base_saida, exist_ok=True)
 
     # Define o caminho para o relatório final
     caminho_relatorio_final = os.path.join(diretorio_base_saida, 'relatorio_consolidado_replicacao.txt')

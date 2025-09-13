@@ -129,7 +129,7 @@ def main():
     matrizes_para_testar = [
                             {"nome": "matriz_base",
                              "dados":
-                                matriz_base = np.block([[0,8,4, 0,7,2, 1,0,5], 
+                                np.block([[0,8,4, 0,7,2, 1,0,5], 
                                                     [2,0,7, 8,3,0, 9,0,0], 
                                                     [6,0,0, 5,0,9, 0,0,8], 
                                                     [0,6,0, 9,2,8, 4,0,0],

@@ -76,23 +76,6 @@ def ler_relatorio(caminho_arquivo):
 #def escreve_arquivo_parametrizado(populacao, geracoes, mutacao, elitismo, torneio, matriz_base):
 def escreve_arquivo_parametrizado(populacao, geracoes, mutacao, recombinacao, matriz_base):    
     """Escreve os parâmetros fornecidos para o arquivo entrada.in."""
-    #populacao = 600
-    #geracoes = 200
-    #mutacao = 1
-    #elitismo = 5
-    #torneio = 3
-    #recombinacao = 70
-
-    '''matriz_base = np.block([[0,8,4, 0,7,2, 1,0,5], 
-                            [2,0,7, 8,3,0, 9,0,0], 
-                            [6,0,0, 5,0,9, 0,0,8], 
-                            [0,6,0, 9,2,8, 4,0,0],
-                            [0,7,0, 0,0,0, 0,6,9], 
-                            [0,2,0, 0,0,0, 0,8,1], 
-                            [0,3,2, 0,5,0, 6,9,4], 
-                            [7,0,0, 0,0,0, 0,0,2], 
-                            [1,0,0, 2,0,4, 0,0,7]])'''
-    
     '''celulas_vazias = np.argwhere(matriz_base == 0)
     celulas_vazias1d = np.where(matriz_base.flatten() == 0)[0]'''
     numeros_validos = [1, 2, 3, 4, 5, 6, 7, 8, 9]

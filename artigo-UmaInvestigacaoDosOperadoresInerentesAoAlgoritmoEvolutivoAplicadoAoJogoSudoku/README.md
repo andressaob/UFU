@@ -94,4 +94,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou pull r
 
 ---
 
-**Desenvolvido com ❤️ usando Python, NumPy e Numba**
+**Desenvolvido usando Python, NumPy e Numba**

@@ -1,0 +1,225 @@
+import re
+import os
+import subprocess
+import numpy as np
+import sys
+import struct
+import time
+
+'''
+    Função ler_relatorio:
+        Lê um arquivo de relatório e extrai os dados de geração e fitness.
+    Parâmetros:
+        caminho_arquivo - caminho para o arquivo de relatório.
+    Retorna:
+        Duas listas contendo os valores de gerações e fitness.
+'''
+def ler_relatorio(caminho_arquivo):
+    valores_geracoes = []
+    valores_fitness = []
+    try:
+        with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
+            for linha in arquivo:
+                match = re.search(r'Geracao:\s*(\d+),\s*fitness:\s*(\d+)', linha, re.IGNORECASE)
+                if match:
+                    valores_geracoes.append(int(match.group(1)))
+                    valores_fitness.append(int(match.group(2)))
+    except FileNotFoundError:
+        print(f"Erro: O arquivo '{caminho_arquivo}' não foi encontrado.")
+    except Exception as e:
+        print(f"Ocorreu um erro ao ler o arquivo: {e}")
+    return valores_geracoes, valores_fitness
+
+'''
+    Função escreve_arquivo_parametrizado:
+        Escreve os parâmetros fornecidos para o arquivo entrada.in.
+    Parâmetros:
+        populacao - tamanho da população.
+        geracoes - número de gerações.
+        mutacao - taxa de mutação.
+        elitismo - número de indivíduos elitistas.
+        torneio - tamanho do torneio.
+        matriz_base - matriz base do Sudoku.
+    Retorno:
+        Nulo.
+'''
+def escreve_arquivo_parametrizado(populacao, geracoes, mutacao, elitismo, torneio, matriz_base):
+
+    numeros_validos = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    try:
+        # Note que o nome do arquivo deve bater com o que o sudoku_ga.py lê
+        with open('entrada.in', 'wb') as arquivo:
+            arquivo.write(populacao.to_bytes(4, byteorder='big')) 
+            arquivo.write(geracoes.to_bytes(4, byteorder='big'))
+            arquivo.write(struct.pack('>f', mutacao))
+            arquivo.write(elitismo.to_bytes(4, byteorder='big'))
+            arquivo.write(torneio.to_bytes(4, byteorder='big'))
+            np.save(arquivo, numeros_validos)
+            np.save(arquivo, matriz_base)
+    except Exception as e:
+        print(f"Problemas na criação do arquivo {e}\n")
+
+'''
+
+    Função main:
+        Função principal que executa uma bateria de testes com diferentes parâmetros.
+'''
+def main():
+    # Nome do script a ser executado
+    script_a_executar = 'agSudoku.py'
+    num_execucoes_por_teste = 10
+
+    # Diretório relativo para facilitar a execução
+    diretorio_base_saida = os.path.join('.', 'resultados_testes')
+    os.makedirs(diretorio_base_saida, exist_ok=True)
+
+    # Define o caminho para o relatório final
+    caminho_relatorio_final = os.path.join(diretorio_base_saida, 'relatorio_consolidado.txt')
+
+    # Matrizes de Sudoku para os testes
+    matrizes_para_testar = [
+                            {"nome": "matrizBase",
+                            "dados":
+                                np.array([[0,8,4, 0,7,2, 1,0,5], 
+                                        [2,0,7, 8,3,0, 9,0,0], 
+                                        [6,0,0, 5,0,9, 0,0,8], 
+                                        [0,6,0, 9,2,8, 4,0,0],
+                                        [0,7,0, 0,0,0, 0,6,9], 
+                                        [0,2,0, 0,0,0, 0,8,1], 
+                                        [0,3,2, 0,5,0, 6,9,4], 
+                                        [7,0,0, 0,0,0, 0,0,2], 
+                                        [1,0,0, 2,0,4, 0,0,7]])}]
+
+    # Configurações para testes
+    configs_para_testar = []
+    taxas_mutacao = [0.25, 0.5, 2.0, 10.0]
+    geracoes_fixas = 200
+    taxas_elitismo = [5, 10, 15, 20]
+    tamanhos_torneio = [3, 4, 5]
+    tamanhos_populacao = 600
+
+    for matriz in matrizes_para_testar:
+        for mutacao in taxas_mutacao:
+            for elitismo in taxas_elitismo:
+                for torneio in tamanhos_torneio:
+                    config = {
+                        'populacao': tamanhos_populacao,
+                        'mutacao': mutacao,
+                        'geracoes': geracoes_fixas,
+                        'elitismo': elitismo,
+                        'torneio': torneio,
+                        'matriz': matriz
+                    }
+                    configs_para_testar.append(config)
+
+    # Cria o cabeçalho do arquivo de relatório final
+    try:
+        with open(caminho_relatorio_final, 'w', encoding='utf-8') as f_txt:
+            cabecalho = "Mutacao\tElitismo\tTorneio\tMelhor_Fitness\tTempo_Execucao_s\n"
+            f_txt.write(cabecalho)
+    except IOError as e:
+        print(f"ERRO CRÍTICO: Não foi possível criar o arquivo de relatório em '{caminho_relatorio_final}'. Erro: {e}")
+        return
+
+    total_configs = len(configs_para_testar)
+    total_execucoes = total_configs * num_execucoes_por_teste
+    tempo_inicial_total = time.time()
+
+    print(f"===== INICIANDO BATERIA DE TESTES COM {total_configs} CONFIGURAÇÕES =====")
+
+    for config_id, config in enumerate(configs_para_testar):
+        pop = config['populacao']
+        mut = config['mutacao']
+        ger = config['geracoes']
+        eli = config['elitismo']
+        tor = config['torneio']
+        matriz_info = config['matriz']
+        
+        nome_teste = f"mut{mut}_eli{eli}_tor{tor}"
+        diretorio_saida_teste = os.path.join(diretorio_base_saida, nome_teste)
+
+        # Caminho para o relatório específico desta combinação
+        caminho_relatorio_especifico = f'{diretorio_saida_teste}.txt'
+
+        # Cria o arquivo de relatório específico e escreve o cabeçalho (modo 'w')
+        try:
+            with open(caminho_relatorio_especifico, 'w', encoding='utf-8') as f_especifico:
+                # Um cabeçalho mais simples, já que os parâmetros estão no nome do arquivo
+                cabecalho_especifico = "Melhor_Fitness\tTempo_Execucao_s\n"
+                f_especifico.write(cabecalho_especifico)
+        except IOError as e:
+            print(f"    -> ERRO: Não foi possível criar o relatório específico em '{caminho_relatorio_especifico}'. Erro: {e}")
+            continue # Pula para a próxima configuração
+
+        print(f"\n--- [Teste {config_id + 1}/{total_configs}] INICIANDO: {nome_teste} ---")
+
+        for i in range(1, num_execucoes_por_teste + 1):
+            print(f"  --- Execução {i}/{num_execucoes_por_teste} ---")
+            
+            escreve_arquivo_parametrizado(
+                populacao=pop,
+                geracoes=ger,
+                mutacao=mut,
+                elitismo=eli,
+                torneio=tor,
+                matriz_base=matriz_info['dados']
+            )
+            
+            try:
+                # Executa o script do algoritmo genético
+                # Timeout de 3 minutos por segurança, para evitar travamento
+                subprocess.run([sys.executable, script_a_executar], check=True, capture_output=True, text=True, timeout=180)
+            except subprocess.TimeoutExpired:
+                print(f"    -> ERRO: A execução {i} excedeu o tempo limite.")
+                continue
+            except subprocess.CalledProcessError as e:
+                print(f"    -> ERRO ao executar {script_a_executar}:\n{e.stderr}")
+                continue
+
+            # Lê os resultados do arquivo de relatório gerado pelo algoritmo
+            valores_geracoes, valores_fitness = ler_relatorio('relatorioArtigo.txt')
+            if not valores_geracoes:
+                print(f"    -> AVISO: Não foram encontrados dados no relatorioArtigo.txt para a execução {i}.")
+                continue
+
+            melhor_fitness = valores_fitness[-1]
+            tempo_execucao = 0.0
+
+            # tenta ler o tempo de execução do arquivo tempoExec.txt
+            try:
+                with open('tempoExec.txt', 'r', encoding='utf-8') as f_tempo:
+                    tempo_str = f_tempo.read().strip()
+                    if tempo_str:
+                        tempo_execucao = float(tempo_str)
+            except (FileNotFoundError, ValueError): pass
+            
+            # Tenta escrever os resultados no relatório consolidado
+            try:
+                with open(caminho_relatorio_final, 'a', encoding='utf-8') as f_txt:
+                    # Formata a linha de dados com tabulação e a escreve no arquivo
+                    linha_dados = (f"{mut}\t{eli}\t{tor}\t{melhor_fitness}\t{tempo_execucao:.2f}\n")
+                    f_txt.write(linha_dados)
+            except IOError as e:
+                print(f"    -> ERRO ao escrever no relatório consolidado: {e}")
+
+            # Adiciona o resultado desta execução ao relatório ESPECÍFICO
+            try:
+                with open(caminho_relatorio_especifico, 'a', encoding='utf-8') as f_especifico:
+                    linha_dados_especifica = f"{i}\t{melhor_fitness}\t{tempo_execucao:.2f}\n"
+                    f_especifico.write(linha_dados_especifica)
+            except IOError as e:
+                print(f"    -> ERRO ao escrever no relatório específico: {e}")
+
+        print(f"--- Teste '{nome_teste}' concluído. Resultados salvos em '{diretorio_saida_teste}'. ---")
+
+    tempo_final_total = time.time()
+    print("\n=================================================")
+    print("TODOS OS TESTES FORAM FINALIZADOS.")
+    print(f"Total de execuções do algoritmo: {total_execucoes}")
+    print(f"Relatório consolidado salvo em: {caminho_relatorio_final}")
+    print(f"Tempo total da bateria de testes: {(tempo_final_total - tempo_inicial_total) / 60:.2f} minutos.")
+    print("=================================================")
+
+if __name__ == "__main__":
+    main()

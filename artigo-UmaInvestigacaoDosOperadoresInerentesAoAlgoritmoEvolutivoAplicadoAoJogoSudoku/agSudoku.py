@@ -56,7 +56,7 @@ def escreve_arquivo():
             np.save(arquivo, numeros_validos) # Salva os números válidos no arquivo
             np.save(arquivo, matriz_base) # Salva a matriz base no arquivo
         # Estrutura with fecha o arquivo automaticamente
-    except Exception as e: # Caso haja erro na criação do arquivo metricas.in
+    except Exception as e: # Caso haja erro na criação do arquivo entradaArtigo.in
         print(f"Problemas na criação do arquivo {e}\n")
 
 '''

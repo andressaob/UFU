@@ -69,7 +69,7 @@ def escreve_arquivo():
             np.save(arquivo, celulas_vazias) # Salva as células vazias no arquivo)
             np.save(arquivo, celulas_vazias1d) # Salva as células vazias 1D no arquivo)
         # Estrutura with fecha o arquivo automaticamente
-    except Exception as e: # Caso haja erro na criação do arquivo metricas.in
+    except Exception as e: # Caso haja erro na criação do arquivo entrada.in
         print(f"Problemas na criação do arquivo {e}\n")
 
 '''
